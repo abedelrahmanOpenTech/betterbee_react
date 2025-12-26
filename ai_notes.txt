@@ -1,0 +1,7 @@
+1-dont put useless comments
+2-never use short names like m, type message
+3-never use function in useeffect dep array
+4-define variables first then functions then useffeect
+5-use mutate not mutateAsync
+6-check backend/database/q.php for db structure
+7-if you want to alter db, put new queries in backend/database/q_new.sql
