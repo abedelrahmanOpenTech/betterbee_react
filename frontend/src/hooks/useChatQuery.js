@@ -8,6 +8,8 @@ export function useChatUsersQuery() {
         queryFn: async () => {
             return await http(apiUrl + "/chat/users");
         },
+        refetchInterval: 3000,
+
     });
 }
 
@@ -18,6 +20,7 @@ export function useChatMessagesQuery(otherUserId) {
             return await http(apiUrl + `/chat/messages/${otherUserId}`);
         },
         enabled: !!otherUserId,
+
     });
 }
 
@@ -118,9 +121,13 @@ export function useChatUpdates(otherUserId, currentUserId) {
             const messages = chatMessagesData?.chat || [];
 
             const lastMessageId = messages.length > 0 ? messages[messages.length - 1].id : 0;
-            const unreadMessagesIds = messages
-                .filter(m => m.from_user_id === currentUserId && m.is_read === 0)
-                .map(m => m.id);
+            const unreadMessagesIds = [];
+            for (const message of messages) {
+
+                if (message.from_user_id === currentUserId && message.is_read === 0) {
+                    unreadMessagesIds.push(message.id);
+                }
+            }
 
             const response = await http(apiUrl + `/chat/get-chat-updates/${otherUserId}`, {
                 method: 'post',
@@ -139,18 +146,15 @@ export function useChatUpdates(otherUserId, currentUserId) {
 
                     // 1. Add new messages
                     if (response.chat && response.chat.length > 0) {
-                        const newMsgs = response.chat.filter(nm => !newChat.find(om => om.id === nm.id));
-                        if (newMsgs.length > 0) {
-                            newChat = [...newChat, ...newMsgs];
-                            hasChanges = true;
-                        }
+                        newChat = [...newChat, ...response.chat]
+                        hasChanges = true;
                     }
 
                     // 2. Update read status
                     if (response.messagesInfo && response.messagesInfo.length > 0) {
                         response.messagesInfo.forEach(info => {
                             const index = newChat.findIndex(m => m.id === info.id);
-                            if (index !== -1 && newChat[index].is_read !== info.is_read) {
+                            if (index !== -1) {
                                 newChat[index] = { ...newChat[index], is_read: info.is_read };
                                 hasChanges = true;
                             }
@@ -178,7 +182,9 @@ export function useChatUpdates(otherUserId, currentUserId) {
                         }
                     }
 
-                    return hasChanges ? { ...oldData, chat: newChat } : oldData;
+
+
+                    return { ...oldData, chat: newChat }
                 });
             }
             return response;

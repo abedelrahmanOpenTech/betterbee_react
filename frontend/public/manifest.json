@@ -1,0 +1,25 @@
+{
+    "name": "Whisper",
+    "short_name": "Whisper",
+    "description": "Whisper is a fast, secure, and simple chat app that lets you connect instantly with friends and groups. Stay in touch anytime, anywhere with smooth messaging, notifications, and a clean, distraction-free experience.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ffaa00",
+    "icons": [
+        {
+            "src": "images/icon-192x192.png?v=4",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "images/icon-512x512.png?v=4",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "orientation": "portrait",
+    "scope": "/"
+}

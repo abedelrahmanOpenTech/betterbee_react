@@ -12,15 +12,12 @@ import ProfileModal from "../../components/chat/ProfileModal";
 import SettingsModal from "../../components/chat/SettingsModal";
 import toast from "react-hot-toast";
 
-/**
- * Custom toggle component for the main user menu dropdown (React 19 ref prop).
- */
 const CustomToggle = ({ children, onClick, ref }) => (
     <div
         ref={ref}
-        onClick={(e) => {
-            e.preventDefault();
-            onClick(e);
+        onClick={(event) => {
+            event.preventDefault();
+            onClick(event);
         }}
         className="cursor-pointer"
     >
@@ -28,15 +25,12 @@ const CustomToggle = ({ children, onClick, ref }) => (
     </div>
 );
 
-/**
- * Custom toggle component for individual user action dropdowns (React 19 ref prop).
- */
 const ThreeDotsToggle = ({ onClick, ref }) => (
     <span
         ref={ref}
-        onClick={(e) => {
-            e.preventDefault();
-            onClick(e);
+        onClick={(event) => {
+            event.preventDefault();
+            onClick(event);
         }}
         className="pointer hover-splash p-2 rounded d-flex align-items-center justify-content-center"
     >
@@ -54,42 +48,27 @@ export default function Home() {
     const [showProfile, setShowProfile] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
 
-    const { data: authData, isLoading: isAuthLoading } = useAuthInit();//load user info from server
-    const { data: usersData, isLoading: isUsersLoading } = useChatUsersQuery();//load users list
-    const { data: notificationsData } = useChatNotificationsQuery();//listener for new unread messages and online users
+    const { data: authData, isLoading: isAuthLoading } = useAuthInit();
+    const { data: usersData, isLoading: isUsersLoading } = useChatUsersQuery();
+    const { data: notificationsData } = useChatNotificationsQuery();
     const { mutate: markAsUnread } = useMarkAsUnread();
 
     const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
 
-    /**
-     * Navigates to the login page if the user is not authenticated.
-     */
-    useEffect(() => {
-        if (!isAuthLoading && !auth.accessToken) {
-            navigate("/login");
-        }
-    }, [isAuthLoading]);
+    const onlineUsers = notificationsData?.onlineUsers || [];
+    const unreadMessages = notificationsData?.unreadMessages || {};
 
-    /**
-     * Plays a notification sound when a new message event occurs.
-     */
-    useEffect(() => {
-        if (notificationsData?.newMessageFound) {
-            audioRef.current.play().catch(e => console.error("Audio play failed", e));
-        }
-    }, [notificationsData?.newMessageFound]);
+    const filteredUsers = (usersData?.users || []).map(user => {
+        const unreadCount = unreadMessages[user.id] ? unreadMessages[user.id].length : 0;
+        return {
+            ...user,
+            is_online: onlineUsers.some(onlineUser => onlineUser.id === user.id) || user.is_online,
+            unread_count: unreadCount
+        };
+    }).filter(user =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-    if (isAuthLoading || isUsersLoading) {
-        return (
-            <div className="vh-100 d-flex align-items-center justify-content-center bg-grey">
-                <Spinner />
-            </div>
-        );
-    }
-
-    /**
- * Marks a user's messages as read and updates the application state.
- */
     const handleMarkAsUnread = (userId) => {
         markAsUnread(userId, {
             onSuccess: () => {
@@ -104,21 +83,25 @@ export default function Home() {
         });
     };
 
-    const onlineUsers = notificationsData?.onlineUsers || [];
-    const unreadMessages = notificationsData?.unreadMessages || {};
+    useEffect(() => {
+        if (!isAuthLoading && !auth.accessToken) {
+            navigate("/login");
+        }
+    }, [isAuthLoading, auth.accessToken]);
 
-    const filteredUsers = usersData?.users?.map(user => {
-        const unreadCount = unreadMessages[user.id] ? unreadMessages[user.id].length : 0;
-        return {
-            ...user,
-            is_online: onlineUsers.some(onlineUser => onlineUser.id === user.id) || user.is_online,
-            unread_count: unreadCount
-        };
-    }).filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+    useEffect(() => {
+        if (notificationsData?.newMessageFound) {
+            audioRef.current.play().catch(event => { });
+        }
+    }, [notificationsData?.newMessageFound]);
 
-
+    if (isAuthLoading || isUsersLoading) {
+        return (
+            <div className="vh-100 d-flex align-items-center justify-content-center bg-grey">
+                <Spinner />
+            </div>
+        );
+    }
 
     return (
         <div className="container-fluid p-0 vh-100 d-flex flex-column bg-light slide-up-animation overflow-hidden">
@@ -167,7 +150,7 @@ export default function Home() {
                             className="form-control bg-light shadow-none border"
                             placeholder={df('search') + "..."}
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(event) => setSearchTerm(event.target.value)}
                         />
                     </div>
 
@@ -178,11 +161,11 @@ export default function Home() {
                             </div>
                         ) : (
                             filteredUsers.map((user) => (
-                                <div key={user.id} className="d-flex align-items-center justify-content-between list-group-item list-group-item-action pe-1 border-0 border-bottom">
+                                <div key={user.id} className={`${selectedUserId === user.id ? 'bg-light' : ''} d-flex align-items-center justify-content-between list-group-item list-group-item-action pe-1 border-0 border-bottom`}>
                                     <div
                                         role="button"
                                         onClick={() => setSelectedUserId(user.id)}
-                                        className={`d-flex align-items-center w-100 gap-3 py-3 ${selectedUserId === user.id ? 'bg-light' : ''}`}
+                                        className={`d-flex align-items-center w-100 gap-3 py-3 ps-1`}
                                     >
                                         <div className={`profile-container flex-shrink-0 border border-3 rounded-circle position-relative ${user.is_online ? 'border-success' : ''}`} style={{ filter: user.is_online ? 'grayscale(0)' : 'grayscale(100%)' }}>
                                             <img
@@ -190,7 +173,7 @@ export default function Home() {
                                                 alt={user.name}
                                                 className="rounded-circle bg-white"
                                                 style={{ width: '48px', height: '48px', objectFit: 'contain' }}
-                                                onError={(e) => { e.target.src = "https://ui-avatars.com/api/?name=" + user.name }}
+                                                onError={(event) => { event.target.src = "https://ui-avatars.com/api/?name=" + user.name }}
                                             />
                                         </div>
                                         <div className="flex-grow-1">
@@ -208,7 +191,7 @@ export default function Home() {
                                         )}
                                     </div>
 
-                                    <Dropdown align="end" onClick={(e) => e.stopPropagation()}>
+                                    <Dropdown align="end" onClick={(event) => event.stopPropagation()}>
                                         <Dropdown.Toggle as={ThreeDotsToggle} id={`user-dropdown-${user.id}`} />
                                         <Dropdown.Menu className="shadow-sm border-0 rounded-theme">
                                             <Dropdown.Item className="py-2" onClick={() => handleMarkAsUnread(user.id)}>

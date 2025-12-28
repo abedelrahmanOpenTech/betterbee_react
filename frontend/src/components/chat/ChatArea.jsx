@@ -14,15 +14,12 @@ import withReactContent from 'sweetalert2-react-content';
 
 const MySwal = withReactContent(Swal);
 
-/**
- * Custom toggle component for message options dropdown (React 19 ref prop).
- */
 const MessageOptionsToggle = ({ onClick, ref }) => (
     <span
         ref={ref}
-        onClick={(e) => {
-            e.preventDefault();
-            onClick(e);
+        onClick={(event) => {
+            event.preventDefault();
+            onClick(event);
         }}
         className="cursor-pointer text-muted p-1 hover-opacity-100 opacity-50 d-flex align-items-center"
         style={{ fontSize: '0.8rem' }}
@@ -32,6 +29,62 @@ const MessageOptionsToggle = ({ onClick, ref }) => (
         </svg>
     </span>
 );
+
+const FileIcon = ({ filename }) => {
+    const ext = filename.split('.').pop().toLowerCase();
+
+    // PDF Icon
+    if (ext === 'pdf') {
+        return (
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e11d48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+                <path d="M9 13v-1h6v1" /><path d="M9 17v-1h6v1" /><path d="M9 15h6" />
+            </svg>
+        );
+    }
+
+    // Word Icon
+    if (['doc', 'docx'].includes(ext)) {
+        return (
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+                <path d="M12 18V12" /><path d="M9 18V15" /><path d="M15 18V15" />
+            </svg>
+        );
+    }
+
+    // Excel Icon
+    if (['xls', 'xlsx', 'csv'].includes(ext)) {
+        return (
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+                <path d="M8 13h2" /><path d="M8 17h2" /><path d="M14 13h2" /><path d="M14 17h2" /><path d="M8 15h8" />
+            </svg>
+        );
+    }
+
+    // Archive Icon
+    if (['zip', 'rar', '7z', 'tar'].includes(ext)) {
+        return (
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+                <path d="M12 12v6" /><path d="M10 15h4" /><path d="M10 12h4" /><path d="M10 18h4" />
+            </svg>
+        );
+    }
+
+    // Generic File Icon
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+            <polyline points="14 2 14 8 20 8" />
+        </svg>
+    );
+};
 
 export default function ChatArea({ otherUserId, onClose }) {
     const auth = useAuth();
@@ -46,6 +99,12 @@ export default function ChatArea({ otherUserId, onClose }) {
     const [replyingTo, setReplyingTo] = useState(null);
     const [editingMessage, setEditingMessage] = useState(null);
 
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingTime, setRecordingTime] = useState(0);
+    const mediaRecorderRef = useRef(null);
+    const audioChunksRef = useRef([]);
+    const timerRef = useRef(null);
+
     const chatContainerRef = useRef(null);
     const fileInputRef = useRef(null);
     const textareaRef = useRef(null);
@@ -53,7 +112,6 @@ export default function ChatArea({ otherUserId, onClose }) {
     const emojiPickerRef = useRef(null);
 
     const { data: chatData, isLoading } = useChatMessagesQuery(otherUserId);
-    // Call useChatUpdates to poll for new messages, edits, and deletes
     useChatUpdates(otherUserId, auth?.user?.id);
 
     const { mutate: sendMessage, isPending: isSending } = useSendMessage();
@@ -62,86 +120,47 @@ export default function ChatArea({ otherUserId, onClose }) {
     const { mutate: editMessage } = useEditMessage();
 
     const otherUser = chatData?.otherUser;
-    const messages = useMemo(() => chatData?.chat || [], [chatData]);
+    const messages = chatData?.chat || [];
 
-    /**
-     * Scrolls the chat message container to the very bottom position.
-     */
+    const groupedMessages = useMemo(() => {
+        const groups = {};
+        messages.forEach((message) => {
+            const date = new Date(message.created_at);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            let dateKey = date.toLocaleDateString();
+            if (date.toDateString() === today.toDateString()) {
+                dateKey = df('today');
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                dateKey = df('yesterday');
+            }
+
+            if (!groups[dateKey]) {
+                groups[dateKey] = [];
+            }
+            groups[dateKey].push(message);
+        });
+        console.log(groups);
+        return groups;
+    }, [messages])
+
     const scrollToBottom = () => {
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
     };
 
-    /**
-     * Smoothly scrolls to a specific message element by its ID.
-     */
-    const scrollToMessage = (msgId) => {
-        const el = document.getElementById(`message-${msgId}`);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('bg-warning-subtle');
-            setTimeout(() => el.classList.remove('bg-warning-subtle'), 2000);
+    const scrollToMessage = (messageId) => {
+        const element = document.getElementById(`message-${messageId}`);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.classList.add('bg-warning-subtle');
+            setTimeout(() => element.classList.remove('bg-warning-subtle'), 2000);
         }
     };
 
-    /**
-     * Closes the emoji picker when clicking outside of the component area.
-     */
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
-                setIsEmojiPickerOpen(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
-
-    /**
-     * Handles initial scroll and manages external library bindings like Fancybox.
-     */
-    useEffect(() => {
-        if (!isSearchOpen) {
-            scrollToBottom();
-        }
-        Fancybox.bind("[data-fancybox]", {});
-        return () => {
-            Fancybox.destroy();
-        };
-    }, [chatData, otherUserId, isSearchOpen]);
-
-    /**
-     * Performs real-time message searching and updates matching results.
-     */
-    useEffect(() => {
-        if (!searchQuery.trim()) {
-            setSearchResults([]);
-            setCurrentResultIndex(0);
-            return;
-        }
-
-        const results = messages.filter(msg =>
-            msg.message && msg.message.toLowerCase().includes(searchQuery.toLowerCase())
-        ).map(msg => msg.id);
-
-        setSearchResults(results);
-
-        if (results.length > 0) {
-            const lastIndex = results.length - 1;
-            setCurrentResultIndex(lastIndex);
-            scrollToMessage(results[lastIndex]);
-        } else {
-            setCurrentResultIndex(0);
-        }
-
-    }, [searchQuery, messages]);
-
-    /**
-     * Moves the search selection to the next matching message.
-     */
     const handleNextResult = () => {
         if (searchResults.length === 0) return;
         const nextIndex = (currentResultIndex + 1) % searchResults.length;
@@ -149,9 +168,6 @@ export default function ChatArea({ otherUserId, onClose }) {
         scrollToMessage(searchResults[nextIndex]);
     };
 
-    /**
-     * Moves the search selection to the previous matching message.
-     */
     const handlePrevResult = () => {
         if (searchResults.length === 0) return;
         const prevIndex = (currentResultIndex - 1 + searchResults.length) % searchResults.length;
@@ -159,9 +175,6 @@ export default function ChatArea({ otherUserId, onClose }) {
         scrollToMessage(searchResults[prevIndex]);
     };
 
-    /**
-     * Toggles the message search bar and resets related states.
-     */
     const toggleSearch = () => {
         if (isSearchOpen) {
             setIsSearchOpen(false);
@@ -174,21 +187,9 @@ export default function ChatArea({ otherUserId, onClose }) {
         }
     };
 
-    /**
-     * Automatically focuses the text input when the component loads or searching ends.
-     */
-    useEffect(() => {
-        if (!isLoading && textareaRef.current && !isSearchOpen && !replyingTo && !editingMessage) {
-            textareaRef.current.focus();
-        }
-    }, [isLoading, otherUserId, isSearchOpen, replyingTo, editingMessage]);
-
-    /**
-     * Manages file selection and triggers uploads to the chat server.
-     */
-    const handleFileSelect = (e) => {
-        if (e.target.files && e.target.files.length > 0) {
-            const files = Array.from(e.target.files);
+    const handleFileSelect = (event) => {
+        if (event.target.files && event.target.files.length > 0) {
+            const files = Array.from(event.target.files);
             setIsUploading(true);
 
             let uploadedCount = 0;
@@ -223,9 +224,6 @@ export default function ChatArea({ otherUserId, onClose }) {
         }
     };
 
-    /**
-     * Appends the selected emoji to the current message text.
-     */
     const onEmojiClick = (emojiObject) => {
         setMessage(prev => prev + emojiObject.emoji);
         if (textareaRef.current) {
@@ -233,30 +231,24 @@ export default function ChatArea({ otherUserId, onClose }) {
         }
     };
 
-    /**
-     * Initializes a reply to a specific message and focuses the input area.
-     */
-    const handleReply = (msg) => {
-        setReplyingTo(msg);
+    const handleReply = (message) => {
+        setReplyingTo(message);
         if (textareaRef.current) {
             textareaRef.current.focus();
         }
     };
 
-    const handleEdit = (msg) => {
-        setEditingMessage(msg);
-        setMessage(msg.message);
+    const handleEdit = (message) => {
+        setEditingMessage(message);
+        setMessage(message.message);
         setReplyingTo(null);
         if (textareaRef.current) {
             textareaRef.current.focus();
         }
     };
 
-    /**
-     * Sends the current message content to the backend.
-     */
-    const handleSend = (e) => {
-        e.preventDefault();
+    const handleSend = (event) => {
+        event.preventDefault();
         if (!message.trim()) return;
 
         if (editingMessage) {
@@ -294,17 +286,11 @@ export default function ChatArea({ otherUserId, onClose }) {
         }
     };
 
-    /**
-     * Copies text content to the user's system clipboard.
-     */
     const handleCopy = (text) => {
         navigator.clipboard.writeText(text);
         toast.success(df('copied_to_clipboard'));
     };
 
-    /**
-     * Deletes a message from the current user's local view.
-     */
     const handleDeleteForMe = async (messageId) => {
         const result = await MySwal.fire({
             title: df('are_you_sure'),
@@ -332,9 +318,6 @@ export default function ChatArea({ otherUserId, onClose }) {
         });
     };
 
-    /**
-     * Deletes a message for all participants in the conversation.
-     */
     const handleDeleteForEveryone = async (messageId) => {
         const result = await MySwal.fire({
             title: df('are_you_sure'),
@@ -362,14 +345,141 @@ export default function ChatArea({ otherUserId, onClose }) {
         });
     };
 
-    /**
-     * Identifies if a file is an image based on its extension.
-     */
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const recorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = recorder;
+            audioChunksRef.current = [];
+
+            recorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            recorder.onstop = () => {
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+                const audioFile = new File([audioBlob], `voice_record_${Date.now()}.wav`, { type: 'audio/wav' });
+
+                const formData = new FormData();
+                formData.append('to_user_id', otherUserId);
+                formData.append('chat_file', audioFile);
+
+                sendMessage(formData, {
+                    onSuccess: () => {
+                        toast.success(df('voice_sent'));
+                        scrollToBottom();
+                    },
+                    onError: (error) => {
+                        toast.error(error.message ? error.message : df('error'));
+                    }
+                });
+
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            recorder.start();
+            setIsRecording(true);
+            setRecordingTime(0);
+            timerRef.current = setInterval(() => {
+                setRecordingTime(prev => prev + 1);
+            }, 1000);
+        } catch (err) {
+            console.error("Error accessing microphone:", err);
+            toast.error(df('microphone_access_denied'));
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+            mediaRecorderRef.current.stop();
+        }
+        setIsRecording(false);
+        clearInterval(timerRef.current);
+    };
+
+    const cancelRecording = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+            mediaRecorderRef.current.onstop = null; // Prevent sending
+            mediaRecorderRef.current.stop();
+            const stream = mediaRecorderRef.current.stream;
+            stream.getTracks().forEach(track => track.stop());
+        }
+        setIsRecording(false);
+        clearInterval(timerRef.current);
+        setRecordingTime(0);
+    };
+
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
     const isImage = (filename) => {
         if (!filename) return false;
         const ext = filename.split('.').pop().toLowerCase();
         return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
     };
+
+    const isAudio = (filename) => {
+        if (!filename) return false;
+        const ext = filename.split('.').pop().toLowerCase();
+        return ['wav', 'mp3', 'ogg', 'm4a', 'aac', 'webm'].includes(ext);
+    };
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+                setIsEmojiPickerOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!isSearchOpen) {
+            scrollToBottom();
+        }
+        Fancybox.bind("[data-fancybox]", {});
+        return () => {
+            Fancybox.destroy();
+        };
+
+    }, [chatData, otherUserId, isSearchOpen]);
+
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            setCurrentResultIndex(0);
+            return;
+        }
+
+        const results = messages.filter(message =>
+            message.message && message.message.toLowerCase().includes(searchQuery.toLowerCase())
+        ).map(message => message.id);
+
+        setSearchResults(results);
+
+        if (results.length > 0) {
+            const lastIndex = results.length - 1;
+            setCurrentResultIndex(lastIndex);
+            scrollToMessage(results[lastIndex]);
+        } else {
+            setCurrentResultIndex(0);
+        }
+
+    }, [searchQuery]);
+
+    useEffect(() => {
+        if (!isLoading && textareaRef.current && !isSearchOpen && !replyingTo && !editingMessage) {
+            textareaRef.current.focus();
+        }
+    }, [isLoading, otherUserId, isSearchOpen, replyingTo, editingMessage]);
 
     if (isLoading && !chatData) {
         return (
@@ -378,26 +488,6 @@ export default function ChatArea({ otherUserId, onClose }) {
             </div>
         );
     }
-
-    const groupedMessages = messages.reduce((acc, msg) => {
-        const date = new Date(msg.created_at);
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        let dateKey = date.toLocaleDateString();
-        if (date.toDateString() === today.toDateString()) {
-            dateKey = df('today');
-        } else if (date.toDateString() === yesterday.toDateString()) {
-            dateKey = df('yesterday');
-        }
-
-        if (!acc[dateKey]) {
-            acc[dateKey] = [];
-        }
-        acc[dateKey].push(msg);
-        return acc;
-    }, {});
 
 
     return (
@@ -422,7 +512,7 @@ export default function ChatArea({ otherUserId, onClose }) {
                                     alt={otherUser?.name}
                                     className="rounded-circle bg-white"
                                     style={{ width: '48px', height: '48px', objectFit: 'contain' }}
-                                    onError={(e) => { e.target.src = "https://ui-avatars.com/api/?name=" + otherUser?.name }}
+                                    onError={(event) => { event.target.src = "https://ui-avatars.com/api/?name=" + otherUser?.name }}
                                 />
                             </div>
 
@@ -458,7 +548,7 @@ export default function ChatArea({ otherUserId, onClose }) {
 
                                 placeholder={df('search') + "..."}
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(event) => setSearchQuery(event.target.value)}
                                 style={{ minWidth: '50px' }}
                             />
 
@@ -497,68 +587,106 @@ export default function ChatArea({ otherUserId, onClose }) {
                 </div>
             </div>
 
-            <div className="chat-messages flex-grow-1 overflow-auto p-3" ref={chatContainerRef}>
+            <div
+                className="chat-messages flex-grow-1 overflow-auto p-3"
+                ref={chatContainerRef}
+                style={{
+                    backgroundColor: 'var(--theme-color-light)',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='385' height='192.5' viewBox='0 0 1600 800'%3E%3Cpath fill='%23FFFFFF' d='M1102.5 734.8c2.5-1.2 24.8-8.6 25.6-7.5.5.7-3.9 23.8-4.6 24.5C1123.3 752.1 1107.5 739.5 1102.5 734.8zM1226.3 229.1c0-.1-4.9-9.4-7-14.2-.1-.3-.3-1.1-.4-1.6-.1-.4-.3-.7-.6-.9-.3-.2-.6-.1-.8.1l-13.1 12.3c0 0 0 0 0 0-.2.2-.3.5-.4.8 0 .3 0 .7.2 1 .1.1 1.4 2.5 2.1 3.6 2.4 3.7 6.5 12.1 6.5 12.2.2.3.4.5.7.6.3 0 .5-.1.7-.3 0 0 1.8-2.5 2.7-3.6 1.5-1.6 3-3.2 4.6-4.7 1.2-1.2 1.6-1.4 2.1-1.6.5-.3 1.1-.5 2.5-1.9C1226.5 230.4 1226.6 229.6 1226.3 229.1zM33 770.3C33 770.3 33 770.3 33 770.3c0-.7-.5-1.2-1.2-1.2-.1 0-.3 0-.4.1-1.6.2-14.3.1-22.2 0-.3 0-.6.1-.9.4-.2.2-.4.5-.4.9 0 .2 0 4.9.1 5.9l.4 13.6c0 .3.2.6.4.9.2.2.5.3.8.3 0 0 .1 0 .1 0 7.3-.7 14.7-.9 22-.6.3 0 .7-.1.9-.3.2-.2.4-.6.4-.9C32.9 783.3 32.9 776.2 33 770.3z'/%3E%3Cpath fill='%23FFFFFF' d='M171.1 383.4c1.3-2.5 14.3-22 15.6-21.6.8.3 11.5 21.2 11.5 22.1C198.1 384.2 177.9 384 171.1 383.4zM596.4 711.8c-.1-.1-6.7-8.2-9.7-12.5-.2-.3-.5-1-.7-1.5-.2-.4-.4-.7-.7-.8-.3-.1-.6 0-.8.3L574 712c0 0 0 0 0 0-.2.2-.2.5-.2.9 0 .3.2.7.4.9.1.1 1.8 2.2 2.8 3.1 3.1 3.1 8.8 10.5 8.9 10.6.2.3.5.4.8.4.3 0 .5-.2.6-.5 0 0 1.2-2.8 2-4.1 1.1-1.9 2.3-3.7 3.5-5.5.9-1.4 1.3-1.7 1.7-2 .5-.4 1-.7 2.1-2.4C596.9 713.1 596.8 712.3 596.4 711.8zM727.5 179.9C727.5 179.9 727.5 179.9 727.5 179.9c.6.2 1.3-.2 1.4-.8 0-.1 0-.2 0-.4.2-1.4 2.8-12.6 4.5-19.5.1-.3 0-.6-.2-.8-.2-.3-.5-.4-.8-.5-.2 0-4.7-1.1-5.7-1.3l-13.4-2.7c-.3-.1-.7 0-.9.2-.2.2-.4.4-.5.6 0 0 0 .1 0 .1-.8 6.5-2.2 13.1-3.9 19.4-.1.3 0 .6.2.9.2.3.5.4.8.5C714.8 176.9 721.7 178.5 727.5 179.9zM728.5 178.1c-.1-.1-.2-.2-.4-.2C728.3 177.9 728.4 178 728.5 178.1z'/%3E%3Cg fill='%23FFF'%3E%3Cpath d='M699.6 472.7c-1.5 0-2.8-.8-3.5-2.3-.8-1.9 0-4.2 1.9-5 3.7-1.6 6.8-4.7 8.4-8.5 1.6-3.8 1.7-8.1.2-11.9-.3-.9-.8-1.8-1.2-2.8-.8-1.7-1.8-3.7-2.3-5.9-.9-4.1-.2-8.6 2-12.8 1.7-3.1 4.1-6.1 7.6-9.1 1.6-1.4 4-1.2 5.3.4 1.4 1.6 1.2 4-.4 5.3-2.8 2.5-4.7 4.7-5.9 7-1.4 2.6-1.9 5.3-1.3 7.6.3 1.4 1 2.8 1.7 4.3.5 1.1 1 2.2 1.5 3.3 2.1 5.6 2 12-.3 17.6-2.3 5.5-6.8 10.1-12.3 12.5C700.6 472.6 700.1 472.7 699.6 472.7zM740.4 421.4c1.5-.2 3 .5 3.8 1.9 1.1 1.8.4 4.2-1.4 5.3-3.7 2.1-6.4 5.6-7.6 9.5-1.2 4-.8 8.4 1.1 12.1.4.9 1 1.7 1.6 2.7 1 1.7 2.2 3.5 3 5.7 1.4 4 1.2 8.7-.6 13.2-1.4 3.4-3.5 6.6-6.8 10.1-1.5 1.6-3.9 1.7-5.5.2-1.6-1.4-1.7-3.9-.2-5.4 2.6-2.8 4.3-5.3 5.3-7.7 1.1-2.8 1.3-5.6.5-7.9-.5-1.3-1.3-2.7-2.2-4.1-.6-1-1.3-2.1-1.9-3.2-2.8-5.4-3.4-11.9-1.7-17.8 1.8-5.9 5.8-11 11.2-14C739.4 421.6 739.9 421.4 740.4 421.4zM261.3 590.9c5.7 6.8 9 15.7 9.4 22.4.5 7.3-2.4 16.4-10.2 20.4-3 1.5-6.7 2.2-11.2 2.2-7.9-.1-12.9-2.9-15.4-8.4-2.1-4.7-2.3-11.4 1.8-15.9 3.2-3.5 7.8-4.1 11.2-1.6 1.2.9 1.5 2.7.6 3.9-.9 1.2-2.7 1.5-3.9.6-1.8-1.3-3.6.6-3.8.8-2.4 2.6-2.1 7-.8 9.9 1.5 3.4 4.7 5 10.4 5.1 3.6 0 6.4-.5 8.6-1.6 4.7-2.4 7.7-8.6 7.2-15-.5-7.3-5.3-18.2-13-23.9-4.2-3.1-8.5-4.1-12.9-3.1-3.1.7-6.2 2.4-9.7 5-6.6 5.1-11.7 11.8-14.2 19-2.7 7.7-2.1 15.8 1.9 23.9.7 1.4.1 3.1-1.3 3.7-1.4.7-3.1.1-3.7-1.3-4.6-9.4-5.4-19.2-2.2-28.2 2.9-8.2 8.6-15.9 16.1-21.6 4.1-3.1 8-5.1 11.8-6 6-1.4 12 0 17.5 4C257.6 586.9 259.6 588.8 261.3 590.9z'/%3E%3Ccircle cx='1013.7' cy='153.9' r='7.1'/%3E%3Ccircle cx='1024.3' cy='132.1' r='7.1'/%3E%3Ccircle cx='1037.3' cy='148.9' r='7.1'/%3E%3Cpath d='M1508.7 297.2c-4.8-5.4-9.7-10.8-14.8-16.2 5.6-5.6 11.1-11.5 15.6-18.2 1.2-1.7.7-4.1-1-5.2-1.7-1.2-4.1-.7-5.2 1-4.2 6.2-9.1 11.6-14.5 16.9-4.8-5-9.7-10-14.7-14.9-1.5-1.5-3.9-1.5-5.3 0-1.5 1.5-1.5 3.9 0 5.3 4.9 4.8 9.7 9.8 14.5 14.8-1.1 1.1-2.3 2.2-3.5 3.2-4.1 3.8-8.4 7.8-12.4 12-1.4 1.5-1.4 3.8 0 5.3 0 0 0 0 0 0 1.5 1.4 3.9 1.4 5.3-.1 3.9-4 8.1-7.9 12.1-11.7 1.2-1.1 2.3-2.2 3.5-3.3 4.9 5.3 9.8 10.6 14.6 15.9.1.1.1.1.2.2 1.4 1.4 3.7 1.5 5.2.2C1510 301.2 1510.1 298.8 1508.7 297.2zM327.6 248.6l-.4-2.6c-1.5-11.1-2.2-23.2-2.3-37 0-5.5 0-11.5.2-18.5 0-.7 0-1.5 0-2.3 0-5 0-11.2 3.9-13.5 2.2-1.3 5.1-1 8.5.9 5.7 3.1 13.2 8.7 17.5 14.9 5.5 7.8 7.3 16.9 5 25.7-3.2 12.3-15 31-30 32.1L327.6 248.6zM332.1 179.2c-.2 0-.3 0-.4.1-.1.1-.7.5-1.1 2.7-.3 1.9-.3 4.2-.3 6.3 0 .8 0 1.7 0 2.4-.2 6.9-.2 12.8-.2 18.3.1 12.5.7 23.5 2 33.7 11-2.7 20.4-18.1 23-27.8 1.9-7.2.4-14.8-4.2-21.3l0 0C347 188.1 340 183 335 180.3 333.6 179.5 332.6 179.2 332.1 179.2zM516.3 60.8c-.1 0-.2 0-.4-.1-2.4-.7-4-.9-6.7-.7-.7 0-1.3-.5-1.4-1.2 0-.7.5-1.3 1.2-1.4 3.1-.2 4.9 0 7.6.8.7.2 1.1.9.9 1.6C517.3 60.4 516.8 60.8 516.3 60.8zM506.1 70.5c-.5 0-1-.3-1.2-.8-.8-2.1-1.2-4.3-1.3-6.6 0-.7.5-1.3 1.2-1.3.7 0 1.3.5 1.3 1.2.1 2 .5 3.9 1.1 5.8.2.7-.1 1.4-.8 1.6C506.4 70.5 506.2 70.5 506.1 70.5zM494.1 64.4c-.4 0-.8-.2-1-.5-.4-.6-.3-1.4.2-1.8 1.8-1.4 3.7-2.6 5.8-3.6.6-.3 1.4 0 1.7.6.3.6 0 1.4-.6 1.7-1.9.9-3.7 2-5.3 3.3C494.7 64.3 494.4 64.4 494.1 64.4zM500.5 55.3c-.5 0-.9-.3-1.2-.7-.5-1-1.2-1.9-2.4-3.4-.3-.4-.7-.9-1.1-1.4-.4-.6-.3-1.4.2-1.8.6-.4 1.4-.3 1.8.2.4.5.8 1 1.1 1.4 1.3 1.6 2.1 2.6 2.7 3.9.3.6 0 1.4-.6 1.7C500.9 55.3 500.7 55.3 500.5 55.3zM506.7 55c-.3 0-.5-.1-.8-.2-.6-.4-.7-1.2-.3-1.8 1.2-1.7 2.3-3.4 3.3-5.2.3-.6 1.1-.9 1.7-.5.6.3.9 1.1.5 1.7-1 1.9-2.2 3.8-3.5 5.6C507.4 54.8 507.1 55 506.7 55zM1029.3 382.8c-.1 0-.2 0-.4-.1-2.4-.7-4-.9-6.7-.7-.7 0-1.3-.5-1.4-1.2 0-.7.5-1.3 1.2-1.4 3.1-.2 4.9 0 7.6.8.7.2 1.1.9.9 1.6C1030.3 382.4 1029.8 382.8 1029.3 382.8zM1019.1 392.5c-.5 0-1-.3-1.2-.8-.8-2.1-1.2-4.3-1.3-6.6 0-.7.5-1.3 1.2-1.3.7 0 1.3.5 1.3 1.2.1 2 .5 3.9 1.1 5.8.2.7-.1 1.4-.8 1.6C1019.4 392.5 1019.2 392.5 1019.1 392.5zM1007.1 386.4c-.4 0-.8-.2-1-.5-.4-.6-.3-1.4.2-1.8 1.8-1.4 3.7-2.6 5.8-3.6.6-.3 1.4 0 1.7.6.3.6 0 1.4-.6 1.7-1.9.9-3.7 2-5.3 3.3C1007.7 386.3 1007.4 386.4 1007.1 386.4zM1013.5 377.3c-.5 0-.9-.3-1.2-.7-.5-1-1.2-1.9-2.4-3.4-.3-.4-.7-.9-1.1-1.4-.4-.6-.3-1.4.2-1.8.6-.4 1.4-.3 1.8.2.4.5.8 1 1.1 1.4 1.3 1.6 2.1 2.6 2.7 3.9.3.6 0 1.4-.6 1.7C1013.9 377.3 1013.7 377.3 1013.5 377.3zM1019.7 377c-.3 0-.5-.1-.8-.2-.6-.4-.7-1.2-.3-1.8 1.2-1.7 2.3-3.4 3.3-5.2.3-.6 1.1-.9 1.7-.5.6.3.9 1.1.5 1.7-1 1.9-2.2 3.8-3.5 5.6C1020.4 376.8 1020.1 377 1019.7 377zM1329.7 573.4c-1.4 0-2.9-.2-4.5-.7-8.4-2.7-16.6-12.7-18.7-20-.4-1.4-.7-2.9-.9-4.4-8.1 3.3-15.5 10.6-15.4 21 0 1.5-1.2 2.7-2.7 2.8 0 0 0 0 0 0-1.5 0-2.7-1.2-2.7-2.7-.1-6.7 2.4-12.9 7-18 3.6-4 8.4-7.1 13.7-8.8.5-6.5 3.1-12.9 7.4-17.4 7-7.4 18.2-8.9 27.3-10.1l.7-.1c1.5-.2 2.9.9 3.1 2.3.2 1.5-.9 2.9-2.3 3.1l-.7.1c-8.6 1.2-18.4 2.5-24 8.4-3 3.2-5 7.7-5.7 12.4 7.9-1 17.7 1.3 24.3 5.7 4.3 2.9 7.1 7.8 7.2 12.7.2 4.3-1.7 8.3-5.2 11.1C1335.2 572.4 1332.6 573.4 1329.7 573.4zM1311 546.7c.1 1.5.4 3 .8 4.4 1.7 5.8 8.7 14.2 15.1 16.3 2.8.9 5.1.5 7.2-1.1 2.7-2.1 3.2-4.8 3.1-6.6-.1-3.2-2-6.4-4.8-8.3C1326.7 547.5 1317.7 545.6 1311 546.7z'/%3E%3C/g%3E%3C/svg%3E\")`,
+                    backgroundAttachment: 'fixed'
+                }}
+            >
                 {messages.length === 0 && (
-                    <div className="text-center my-auto p-5 animate-fade-in opacity-50">
+                    <div className="text-center my-auto p-5 opacity-50">
                         {df('no_chats_message')}
                     </div>
                 )}
 
-                {Object.entries(groupedMessages).map(([date, msgs]) => (
+                {Object.entries(groupedMessages).map(([date, dayMessages]) => (
                     <div key={date}>
                         <div className="chat-date-divider opacity-7500">
                             <span>{date}</span>
                         </div>
-                        {msgs.map((msg) => {
-                            const isMine = msg.from_user_id === auth.user.id;
+                        {dayMessages.map((message) => {
+                            const isMine = message.from_user_id === auth.user.id;
                             return (
-                                <div key={msg.id} id={`message-${msg.id}`} className={`d-flex mb-3 ${isMine ? 'justify-content-start' : 'justify-content-end'} animate-fade-in`}>
+                                <div key={message.id} id={`message-${message.id}`} className={`d-flex mb-3 ${isMine ? 'justify-content-end' : 'justify-content-start'}`}>
                                     <div className={`chat-bubble ${isMine ? 'mine' : 'theirs'}`} style={{ maxWidth: '75%', minWidth: '130px' }}>
-                                        {msg.reply && (
+                                        {message.reply && (
                                             <div
                                                 role="button"
-                                                onClick={() => scrollToMessage(msg.reply.id)}
+                                                onClick={() => scrollToMessage(message.reply.id)}
                                                 className="reply-context p-2 mb-2 rounded bg-black bg-opacity-10 pointer border-start border-4 border-theme d-flex flex-column"
                                                 style={{ fontSize: '0.85rem' }}
                                             >
-                                                <div className="text-truncate small">@ {msg.reply.message}</div>
+                                                <div className="text-truncate small">@ {message.reply.message}</div>
                                             </div>
                                         )}
-                                        {msg.message && msg.message.trim() !== '' && (
+                                        {message.message && message.message.trim() !== '' && (
                                             <div className="mb-2" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                                                {msg.message}
-                                                {msg.is_edited == 1 && (
+                                                {message.message}
+                                                {message.is_edited == 1 && (
                                                     <span className="ms-1 opacity-50 x-small" style={{ fontSize: '0.7rem' }}>({df('edited')})</span>
                                                 )}
                                             </div>
                                         )}
-                                        {msg.file && (
+                                        {message.file && (
                                             <div className="mb-2 rounded text-dark overflow-hidden">
-                                                {isImage(msg.file) ? (
-                                                    <a href={uploadsUrl + '/' + msg.file} data-fancybox={`gallery-${otherUserId}`}>
+                                                {isImage(message.file) ? (
+                                                    <a href={uploadsUrl + '/' + message.file} data-fancybox={`gallery-${otherUserId}`}>
                                                         <img
-                                                            src={uploadsUrl + '/' + msg.file}
+                                                            src={uploadsUrl + '/' + message.file}
                                                             alt="Attachment"
                                                             className="img-fluid rounded"
                                                             style={{ maxHeight: '200px', objectFit: 'cover' }}
                                                         />
                                                     </a>
+                                                ) : isAudio(message.file) ? (
+                                                    <div className="audio-player-container py-1">
+                                                        <audio
+                                                            controls
+                                                            className="w-100 custom-audio-player"
+                                                            style={{ height: '35px' }}
+                                                            src={uploadsUrl + '/' + message.file}
+                                                        >
+                                                            Your browser does not support the audio element.
+                                                        </audio>
+                                                    </div>
                                                 ) : (
-                                                    <div className="p-2 bg-light rounded">
-                                                        <a href={uploadsUrl + '/' + msg.file} target="_blank" rel="noopener noreferrer" className="text-decoration-none d-flex align-items-center gap-2">
-                                                            <span>📎</span> <span className="text-truncate">{msg.file}</span>
+                                                    <div className="p-3 bg-white bg-opacity-75 rounded d-flex align-items-center justify-content-between gap-3 shadow-sm border" style={{ minWidth: '220px' }}>
+                                                        <div className="d-flex align-items-center gap-2 overflow-hidden">
+                                                            <div className="flex-shrink-0">
+                                                                <FileIcon filename={message.file} />
+                                                            </div>
+                                                            <div className="text-truncate flex-grow-1">
+                                                                <div className="fw-bold small text-truncate text-dark" title={message.file}>{message.file}</div>
+                                                            </div>
+                                                        </div>
+                                                        <a
+                                                            href={uploadsUrl + '/' + message.file}
+                                                            download={message.file}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="btn btn-sm btn-theme rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm"
+                                                            style={{ width: '32px', height: '32px' }}
+                                                            title={df('download')}
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                                                <polyline points="7 10 12 15 17 10" />
+                                                                <line x1="12" y1="15" x2="12" y2="3" />
+                                                            </svg>
                                                         </a>
                                                     </div>
                                                 )}
                                             </div>
                                         )}
 
-                                        <div className={`d-flex justify-content-between align-items-end ${isMine ? '' : 'flex-row-reverse'}`}>
-                                            <div className={`small opacity-7500 fs-7 ${isMine ? 'text-white-50' : 'text-muted text-secondary'}`}>
-                                                {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : msg.created_at_diff}
+                                        <div className={`d-flex justify-content-end align-items-center`}>
+                                            <div className={`d-flex align-items-center gap-2 small fs-7 ${isMine ? 'text-white-50' : 'text-muted text-secondary'}`}>
                                                 {isMine && (
                                                     <span className="ms-1 d-inline-flex align-items-center">
-                                                        {msg.is_read ? (
+                                                        {message.is_read ? (
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                                 <path d="M18 6L7 17l-5-5" />
                                                                 <path d="m22 10-7.5 7.5L13 16" />
@@ -570,20 +698,22 @@ export default function ChatArea({ otherUserId, onClose }) {
                                                         )}
                                                     </span>
                                                 )}
+
+                                                {message.created_at ? new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : message.created_at_diff}
                                             </div>
 
                                             <Dropdown drop={isMine ? "start" : "end"} className="ms-1">
-                                                <Dropdown.Toggle as={MessageOptionsToggle} id={`msg-dropdown-${msg.id}`} />
+                                                <Dropdown.Toggle as={MessageOptionsToggle} />
                                                 <Dropdown.Menu className="shadow-sm border-0 rounded-theme p-1" style={{ fontSize: '0.9rem', minWidth: '150px' }}>
-                                                    <Dropdown.Item onClick={() => handleReply(msg)} className="py-2 rounded">
+                                                    <Dropdown.Item onClick={() => handleReply(message)} className="py-2 rounded">
                                                         <div className="d-flex align-items-center gap-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M10 9V5l-7 7l7 7v-4.1c5 0 8.5 1.6 11 5.1c-1-5-4-10-11-11" /></svg>
                                                             {df('reply')}
                                                         </div>
                                                     </Dropdown.Item>
 
-                                                    {isMine && msg.message && (
-                                                        <Dropdown.Item onClick={() => handleEdit(msg)} className="py-2 rounded">
+                                                    {isMine && message.message && (
+                                                        <Dropdown.Item onClick={() => handleEdit(message)} className="py-2 rounded">
                                                             <div className="d-flex align-items-center gap-2">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" /></svg>
                                                                 {df('edit')}
@@ -591,8 +721,8 @@ export default function ChatArea({ otherUserId, onClose }) {
                                                         </Dropdown.Item>
                                                     )}
 
-                                                    {msg.message && (
-                                                        <Dropdown.Item onClick={() => handleCopy(msg.message)} className="py-2 rounded">
+                                                    {message.message && (
+                                                        <Dropdown.Item onClick={() => handleCopy(message.message)} className="py-2 rounded">
                                                             <div className="d-flex align-items-center gap-2">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m0 16H8V7h11z" /></svg>
                                                                 {df('copy')}
@@ -600,15 +730,15 @@ export default function ChatArea({ otherUserId, onClose }) {
                                                         </Dropdown.Item>
                                                     )}
 
-                                                    <Dropdown.Item onClick={() => handleDeleteForMe(msg.id)} className="py-2 rounded">
+                                                    <Dropdown.Item onClick={() => handleDeleteForMe(message.id)} className="py-2 rounded">
                                                         <div className="d-flex align-items-center gap-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z" /></svg>
                                                             {df('delete_for_me')}
                                                         </div>
                                                     </Dropdown.Item>
 
-                                                    {isMine && !msg.is_read && (
-                                                        <Dropdown.Item onClick={() => handleDeleteForEveryone(msg.id)} className="py-2 rounded text-danger">
+                                                    {isMine && !message.is_read && (
+                                                        <Dropdown.Item onClick={() => handleDeleteForEveryone(message.id)} className="py-2 rounded text-danger">
                                                             <div className="d-flex align-items-center gap-2">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z" /></svg>
                                                                 {df('delete_for_everyone')}
@@ -672,68 +802,111 @@ export default function ChatArea({ otherUserId, onClose }) {
                     </svg>
                 </button>
 
-                <div className="flex-grow-1 d-flex flex-column">
-                    {replyingTo && (
-                        <div className="reply-preview bg-light p-2 mb-1 rounded d-flex justify-content-between align-items-center animate-slide-in">
-                            <div className="text-truncate small flex-grow-1 pe-2 border-start border-3 border-theme ps-2">
-                                <div className="fw-bold x-small">{df('replying_to')}: {replyingTo.user?.name}</div>
-                                <div className="text-truncate opacity-75">{replyingTo.message}</div>
+                <div className="flex-grow-1 d-flex flex-column overflow-hidden">
+                    {isRecording ? (
+                        <div className="d-flex align-items-center justify-content-between p-2 bg-light rounded w-100">
+                            <div className="d-flex align-items-center gap-2">
+                                <div className="recording-dot bg-danger rounded-circle pulse-animation" style={{ width: '10px', height: '10px' }}></div>
+                                <span className="small fw-bold text-danger">{df('recording')} {formatTime(recordingTime)}</span>
                             </div>
                             <button
                                 type="button"
-                                className="btn btn-sm btn-link text-danger p-0 text-decoration-none shadow-none"
-                                onClick={() => setReplyingTo(null)}
+                                className="btn btn-sm btn-link text-danger p-0 text-decoration-none shadow-none fw-bold"
+                                onClick={cancelRecording}
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z" /></svg>
+                                {df('cancel')}
                             </button>
                         </div>
-                    )}
-                    {editingMessage && (
-                        <div className="reply-preview bg-light p-2 mb-1 rounded d-flex justify-content-between align-items-center animate-slide-in">
-                            <div className="text-truncate small flex-grow-1 pe-2 border-start border-3 border-warning ps-2">
-                                <div className="fw-bold x-small text-warning">{df('editing_message')}</div>
-                                <div className="text-truncate opacity-75">{editingMessage.message}</div>
-                            </div>
-                            <button
-                                type="button"
-                                className="btn btn-sm btn-link text-danger p-0 text-decoration-none shadow-none"
-                                onClick={() => {
-                                    setEditingMessage(null);
-                                    setMessage("");
+                    ) : (
+                        <>
+                            {replyingTo && (
+                                <div className="reply-preview bg-light p-2 mb-1 rounded d-flex justify-content-between align-items-center animate-slide-in">
+                                    <div className="text-truncate small flex-grow-1 pe-2 border-start border-3 border-theme ps-2">
+                                        <div className="fw-bold x-small">{df('replying_to')}: {replyingTo.user?.name}</div>
+                                        <div className="text-truncate opacity-75">{replyingTo.message}</div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-link text-danger p-0 text-decoration-none shadow-none"
+                                        onClick={() => setReplyingTo(null)}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z" /></svg>
+                                    </button>
+                                </div>
+                            )}
+                            {editingMessage && (
+                                <div className="reply-preview bg-light p-2 mb-1 rounded d-flex justify-content-between align-items-center animate-slide-in">
+                                    <div className="text-truncate small flex-grow-1 pe-2 border-start border-3 border-warning ps-2">
+                                        <div className="fw-bold x-small text-warning">{df('editing_message')}</div>
+                                        <div className="text-truncate opacity-75">{editingMessage.message}</div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-link text-danger p-0 text-decoration-none shadow-none"
+                                        onClick={() => {
+                                            setEditingMessage(null);
+                                            setMessage("");
+                                        }}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z" /></svg>
+                                    </button>
+                                </div>
+                            )}
+                            <textarea
+                                ref={textareaRef}
+                                className="form-control border-0 shadow-none px-0"
+                                placeholder={df('type_message')}
+                                value={message}
+                                onChange={(event) => setMessage(event.target.value)}
+                                style={{ height: '40px', resize: 'none', lineHeight: '25px' }}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Enter' && !event.shiftKey) {
+                                        event.preventDefault();
+                                        handleSend(event);
+                                    }
                                 }}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z" /></svg>
-                            </button>
-                        </div>
+                                autoFocus
+                            ></textarea>
+                        </>
                     )}
-                    <textarea
-                        ref={textareaRef}
-                        className="form-control border-0 shadow-none px-0"
-                        placeholder={df('type_message')}
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        style={{ height: '40px', resize: 'none', lineHeight: '25px' }}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSend(e);
-                            }
-                        }}
-                        autoFocus
-                    ></textarea>
                 </div>
 
-                <button type="submit"
-                    className="btn text-white shadow-sm ms-1 bg-theme rounded-circle d-flex justify-content-center align-items-center flex-shrink-0"
-                    style={{ width: '40px', height: '40px' }}
-                    disabled={isSending || !message.trim()}
-                >
-                    {isSending ? <div className="spinner-border spinner-border-sm text-white" role="status"></div> : (
-                        <svg className="rtl-rotate" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512">
-                            <path fill="#fff" d="M256 277.333v-42.666H122.027L64 42.667L469.333 256L64 469.333l57.6-192z" />
+                {!message.trim() && !isRecording && (
+                    <button
+                        type="button"
+                        className="btn btn-light ms-1 rounded-circle p-2"
+                        style={{ width: '40px', height: '40px' }}
+                        title={df('voice_record')}
+                        onClick={startRecording}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" y1="19" x2="12" y2="22" />
                         </svg>
-                    )}
-                </button>
+                    </button>
+                )}
+
+                {(message.trim() || isRecording) && (
+                    <button type={isRecording ? "button" : "submit"}
+                        className={`btn text-white shadow-sm ms-1 ${isRecording ? 'bg-danger' : 'bg-theme'} rounded-circle d-flex justify-content-center align-items-center flex-shrink-0 animate-scale-in`}
+                        style={{ width: '40px', height: '40px' }}
+                        disabled={isSending && !isRecording}
+                        onClick={isRecording ? stopRecording : undefined}
+                    >
+                        {isSending ? (
+                            <div className="spinner-border spinner-border-sm text-white" role="status"></div>
+                        ) : isRecording ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            </svg>
+                        ) : (
+                            <svg className="rtl-rotate" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 512 512">
+                                <path fill="#fff" d="M256 277.333v-42.666H122.027L64 42.667L469.333 256L64 469.333l57.6-192z" />
+                            </svg>
+                        )}
+                    </button>
+                )}
             </form>
         </div>
     );
