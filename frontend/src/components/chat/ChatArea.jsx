@@ -451,9 +451,7 @@ export default function ChatArea({ otherUserId, onClose }) {
             scrollToBottom();
         }
         Fancybox.bind("[data-fancybox]", {});
-        return () => {
-            Fancybox.destroy();
-        };
+
 
     }, [chatData, otherUserId, isSearchOpen]);
 
@@ -671,7 +669,7 @@ export default function ChatArea({ otherUserId, onClose }) {
                                                         </div>
                                                         <a
                                                             href={uploadsUrl + '/' + message.file}
-                                                            download={message.file}
+                                                            download={basename(message.file)}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="btn btn-sm btn-theme rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm"

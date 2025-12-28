@@ -42,37 +42,37 @@ class ChatController extends Controller
 
     public function create()
     {
-
         if (empty(request()->message) && !request()->hasFile('chat_file')) {
             return response()->json(["status" => "error", "message" => "message or file required"], 400);
         }
 
-        $filePath = "";
+        $chat = DB::transaction(function () {
+            $data = [
+                "to_user_id" => request()->to_user_id,
+                "from_user_id" => user()->id,
+                "created_at" => Carbon::now(),
+                "message" => request()->message,
+                "reply_to" => request()->reply_to ?? 0,
+                "file" => "",
+                "uid" => ChatHelper::buildUid(user()->id, request()->to_user_id)
+            ];
 
-        if (request()->hasFile('chat_file')) {
-            $file = request()->file('chat_file');
-            $fileName = $file->getClientOriginalName();
-            $file->move(uploadPath("/chat_files"), $fileName);
-            $filePath = "chat_files/$fileName";
-        }
+            $chat = Chat::create($data);
 
-        $data = [
-            "to_user_id" => request()->to_user_id,
-            "from_user_id" => user()->id,
-            "created_at" => Carbon::now(),
-            "message" => request()->message,
-            "reply_to" => request()->reply_to ?? 0,
-            "file" => $filePath,
-            "uid" => ChatHelper::buildUid(user()->id, request()->to_user_id)
-        ];
+            if (request()->hasFile('chat_file')) {
+                $file = request()->file('chat_file');
+                $fileName = $file->getClientOriginalName();
+                $dir = "chat_files/{$chat->id}";
+                $file->move(uploadPath($dir), $fileName);
+                $filePath = "$dir/$fileName";
+                $chat->update(['file' => $filePath]);
+                $data['file'] = $filePath;
+            }
 
-
-        $chat =   DB::transaction(function () use ($data) {
-            $chat =  Chat::create($data);
             LastChat::add($chat->id, $data);
+
             return $chat;
         });
-
 
         return response()->json([
             "status" => "success",

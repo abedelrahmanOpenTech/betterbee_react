@@ -122,10 +122,11 @@ class Chat extends Model
             ->get();
 
         foreach ($chats as $chat) {
-
             if ($chat->file) {
-
-                if (File::exists(uploadPath($chat->file))) {
+                $dir = dirname($chat->file);
+                if ($dir !== 'chat_files' && File::isDirectory(uploadPath($dir))) {
+                    File::deleteDirectory(uploadPath($dir));
+                } elseif (File::exists(uploadPath($chat->file))) {
                     File::delete(uploadPath($chat->file));
                 }
             }
