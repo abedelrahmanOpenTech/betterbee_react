@@ -72,11 +72,19 @@ export function useDeleteMessage() {
 export function useHideMessage() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ messageId }) => {
+        mutationFn: async ({ messageId, otherUserId }) => {
             return await http(apiUrl + `/chat/hide-message/${messageId}`, {
                 method: "post"
             });
         },
+        onSuccess: (data, variables) => {
+            const { messageId, otherUserId } = variables;
+            queryClient.setQueryData(["chat-messages", otherUserId], (oldData) => {
+                if (!oldData) return oldData;
+                const newChat = oldData.chat.filter(m => m.id != messageId);
+                return { ...oldData, chat: newChat }
+            });
+        }
 
     });
 }

@@ -8,9 +8,7 @@ use App\Models\Chat;
 use App\Models\LastChat;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 
 class ChatController extends Controller
 {
@@ -30,6 +28,8 @@ class ChatController extends Controller
         $otherUser = User::findOrFail($otherUserId);
 
         Chat::deleteSoftDeletedMessagesBetweenUsers(user()->id, $otherUser->id);
+        Chat::where('is_edit_reflected', 0)->where('is_edited', 1)->where('created_at', '<', now()->subHours(1))->update(['is_edit_reflected' => 1]);
+        Chat::where('is_delete_reflected', 0)->where('is_deleted', 1)->where('created_at', '<', now()->subHours(1))->update(['is_delete_reflected' => 1]);
 
         $chat = Chat::getMessagesBetweenUsers(user()->id, $otherUser->id);
 
@@ -93,25 +93,15 @@ class ChatController extends Controller
 
         $chat = Chat::getNewMessages($otherUserId, request()->lastMessageId);
 
-        $editedMessages = Chat::where('to_user_id', user()->id)
-            ->where('from_user_id', $otherUserId)
+        $editedMessages = Chat::where("uid", ChatHelper::buildUid($otherUserId, user()->id))
             ->where('is_edited', 1)
             ->where('is_edit_reflected', 0)
             ->get(['id', 'message', 'is_edited']);
 
-        $deletedMessages = Chat::where('to_user_id', user()->id)
-            ->where('from_user_id', $otherUserId)
+        $deletedMessages = Chat::where("uid", ChatHelper::buildUid($otherUserId, user()->id))
             ->where('is_deleted', 1)
             ->where('is_delete_reflected', 0)
             ->get(['id']);
-
-        // Mark as reflected (set to 1)
-        if ($editedMessages->isNotEmpty()) {
-            Chat::whereIn('id', $editedMessages->pluck('id'))->update(['is_edit_reflected' => 1]);
-        }
-        if ($deletedMessages->isNotEmpty()) {
-            Chat::whereIn('id', $deletedMessages->pluck('id'))->update(['is_delete_reflected' => 1]);
-        }
 
         return response()->json([
             "status" => "success",
@@ -227,25 +217,7 @@ class ChatController extends Controller
         ]);
     }
 
-    // public function getChatUpdates($otherUserId)
-    // {
-    //     //stoped for testing
-    //     return '';
-    //     $unreadMessagesIds = json_decode(request()->unreadMessagesIds, true);
 
-    //     $messagesInfo = Chat::whereIn('id', $unreadMessagesIds)->get(['id', 'is_read']);
-
-    //     $deletedMessages =  Chat::getDeletedMessages($otherUserId);
-
-    //     if ($messagesInfo->isEmpty() && $deletedMessages->isEmpty()) {
-    //         abort(204);
-    //     }
-
-    //     return view("components/chat-updates", [
-    //         "deletedMessages" => $deletedMessages,
-    //         "messagesInfo" => $messagesInfo
-    //     ]);
-    // }
 
     private function getCount($unreadMessages)
     {

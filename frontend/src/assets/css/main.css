@@ -13,7 +13,6 @@ body {
     font-family: "Almarai", sans-serif !important;
 }
 
-/* ... existing styles ... */
 
 .chat-messages {
     background-color: #e5ddd5;
@@ -121,7 +120,7 @@ body {
     border-top-right-radius: 0;
 }
 
-.mine .dropstart svg {
+.mine .dropdown-icon {
     color: white !important;
 }
 

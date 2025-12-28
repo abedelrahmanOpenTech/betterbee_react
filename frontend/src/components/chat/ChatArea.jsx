@@ -22,10 +22,10 @@ const MessageOptionsToggle = ({ onClick, ref }) => (
             event.preventDefault();
             onClick(event);
         }}
-        className="cursor-pointer text-muted p-1 hover-opacity-100 opacity-50 d-flex align-items-center"
+        className="pointer text-muted p-1  opacity-75 d-flex align-items-center"
         style={{ fontSize: '0.8rem' }}
     >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+        <svg className="dropdown-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
             <path fill="currentColor" d="M12 16a2 2 0 1 1 0 4a2 2 0 0 1 0-4m0-6a2 2 0 1 1 0 4a2 2 0 0 1 0-4m0-6a2 2 0 1 1 0 4a2 2 0 0 1 0-4" />
         </svg>
     </span>
@@ -143,7 +143,6 @@ export default function ChatArea({ otherUserId, onClose }) {
             }
             groups[dateKey].push(message);
         });
-        console.log(groups);
         return groups;
     }, [messages])
 
@@ -312,9 +311,9 @@ export default function ChatArea({ otherUserId, onClose }) {
 
         if (!result.isConfirmed) return;
 
-        hideMessage({ messageId }, {
+        hideMessage({ messageId, otherUserId }, {
             onSuccess: () => {
-                updateChatMessages();
+
                 toast.success(df('success'));
             },
             onError: () => {
@@ -393,7 +392,6 @@ export default function ChatArea({ otherUserId, onClose }) {
                 setRecordingTime(prev => prev + 1);
             }, 1000);
         } catch (err) {
-            console.error("Error accessing microphone:", err);
             toast.error(df('microphone_access_denied'));
         }
     };
@@ -525,22 +523,22 @@ export default function ChatArea({ otherUserId, onClose }) {
 
                             <div className="text-truncate flex-grow-1">
                                 <div className="fw-bold text-truncate">{otherUser?.name}</div>
-                                <div className="small opacity-7500 text-truncate">{otherUser?.email}</div>
+                                <div className="small opacity-75 text-truncate">{otherUser?.email}</div>
                             </div>
                         </>
                     ) : (
                         <div className="d-flex align-items-center gap-2 bg-white bg-opacity-10 rounded px-2 py-1 slide-up-animation flex-grow-1" style={{ maxWidth: '100%' }}>
                             {searchResults.length > 0 && (
                                 <div className="d-flex align-items-center gap-1 small text-nowrap">
-                                    <span role="button" onClick={handlePrevResult} className="cursor-pointer p-1 hover-opacity-100 opacity-7500">
+                                    <span role="button" onClick={handlePrevResult} className="pointer p-1">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                                             <path fill="#fff" fillRule="evenodd" d="M8 5.293l3.854 3.853l-.707.708L8 6.707L4.854 9.854l-.708-.708z" clipRule="evenodd" />
                                         </svg>
                                     </span>
                                     <span>{searchResults.length > 0 ? currentResultIndex + 1 : 0}</span>
-                                    <span className="opacity-50">/</span>
+                                    <span className="opacity-75">/</span>
                                     <span>{searchResults.length}</span>
-                                    <span role="button" onClick={handleNextResult} className="cursor-pointer p-1 hover-opacity-100 opacity-7500">
+                                    <span role="button" onClick={handleNextResult} className="pointer p-1  ">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
                                             <path fill="none" stroke="#fff" d="M4.5 6L8 9.5L11.5 6" strokeWidth="2" />
                                         </svg>
@@ -559,7 +557,7 @@ export default function ChatArea({ otherUserId, onClose }) {
                                 style={{ minWidth: '50px' }}
                             />
 
-                            <span role="button" onClick={toggleSearch} className="cursor-pointer hover-opacity-100 opacity-7500 ms-1">
+                            <span role="button" onClick={toggleSearch} className="pointer   ms-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
                                     <path fill="#fff" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z" />
                                 </svg>
@@ -570,7 +568,7 @@ export default function ChatArea({ otherUserId, onClose }) {
 
                 <div className="d-flex gap-3 align-items-center justify-content-end flex-shrink-0 ms-2">
                     {!isSearchOpen && (
-                        <div role="button" onClick={toggleSearch} className="opacity-50 hover-opacity-100 text-white">
+                        <div role="button" onClick={toggleSearch} className="opacity-75  text-white">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                                 <g fill="none">
                                     <path fill="currentColor" d="M19 11a8 8 0 1 1-16 0a8 8 0 0 1 16 0" opacity="0.5" />
@@ -581,7 +579,7 @@ export default function ChatArea({ otherUserId, onClose }) {
                     )}
 
                     {!isSearchOpen && (
-                        <div role="button" onClick={onClose} className="d-none d-md-block opacity-50 hover-opacity-100 text-white">
+                        <div role="button" onClick={onClose} className="d-none d-md-block opacity-75  text-white">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                                 <path fill="currentColor"
                                     d="M12 22c-4.714 0-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12s0-7.071 1.464-8.536C4.93 2 7.286 2 12 2s7.071 0 8.535 1.464C22 4.93 22 7.286 22 12s0 7.071-1.465 8.535C19.072 22 16.714 22 12 22"
@@ -604,14 +602,14 @@ export default function ChatArea({ otherUserId, onClose }) {
                 }}
             >
                 {messages.length === 0 && (
-                    <div className="text-center my-auto p-5 opacity-50">
+                    <div className="text-center my-auto p-5 opacity-75">
                         {df('no_chats_message')}
                     </div>
                 )}
 
                 {Object.entries(groupedMessages).map(([date, dayMessages]) => (
                     <div key={date}>
-                        <div className="chat-date-divider opacity-7500">
+                        <div className="chat-date-divider ">
                             <span>{date}</span>
                         </div>
                         {dayMessages.map((message) => {
@@ -633,7 +631,7 @@ export default function ChatArea({ otherUserId, onClose }) {
                                             <div className="mb-2" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                                                 {message.message}
                                                 {message.is_edited == 1 && (
-                                                    <span className="ms-1 opacity-50 x-small" style={{ fontSize: '0.7rem' }}>({df('edited')})</span>
+                                                    <span className="ms-1 opacity-75 x-small" style={{ fontSize: '0.7rem' }}>({df('edited')})</span>
                                                 )}
                                             </div>
                                         )}
@@ -691,8 +689,8 @@ export default function ChatArea({ otherUserId, onClose }) {
                                             </div>
                                         )}
 
-                                        <div className={`d-flex justify-content-end align-items-center`}>
-                                            <div className={`d-flex align-items-center gap-2 small fs-7 ${isMine ? 'text-white-50' : 'text-muted text-secondary'}`}>
+                                        <bdi className={`d-flex justify-content-end align-items-center`}>
+                                            <div className={`d-flex align-items-center gap-2 small fs-7 ${isMine ? 'text-white opacity-75' : 'text-muted text-secondary'}`}>
                                                 {isMine && (
                                                     <span className="ms-1 d-inline-flex align-items-center">
                                                         {message.is_read ? (
@@ -756,7 +754,7 @@ export default function ChatArea({ otherUserId, onClose }) {
                                                     )}
                                                 </Dropdown.Menu>
                                             </Dropdown>
-                                        </div>
+                                        </bdi>
                                     </div>
                                 </div>
                             )
@@ -831,14 +829,12 @@ export default function ChatArea({ otherUserId, onClose }) {
                             {replyingTo && (
                                 <div className="reply-preview bg-light p-2 mb-1 rounded d-flex justify-content-between align-items-center animate-slide-in">
                                     <div className="text-truncate small flex-grow-1 pe-2 border-start border-3 border-theme ps-2">
-                                        <div className="fw-bold x-small">{df('replying_to')}: {replyingTo.user?.name}</div>
-                                        <div className="text-truncate opacity-75">{replyingTo.message}</div>
+                                        <div className="fw-bold x-small">{df('replying_to')}: {replyingTo.message}</div>
                                     </div>
                                     <button
                                         type="button"
                                         className="btn btn-sm btn-link text-danger p-0 text-decoration-none shadow-none"
-                                        onClick={() => setReplyingTo(null)}
-                                    >
+                                        onClick={() => setReplyingTo(null)}>
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z" /></svg>
                                     </button>
                                 </div>

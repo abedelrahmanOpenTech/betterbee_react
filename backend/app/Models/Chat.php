@@ -6,6 +6,7 @@ use App\Helpers\ChatHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class Chat extends Model
 {
@@ -116,9 +117,20 @@ class Chat extends Model
 
     public static function deleteSoftDeletedMessagesBetweenUsers($userID1, $userID2)
     {
-        return  Chat::where("uid", ChatHelper::buildUid($userID1, $userID2))
+        $chats = Chat::where("uid", ChatHelper::buildUid($userID1, $userID2))
             ->where('is_deleted', 1)
-            ->delete();
+            ->get();
+
+        foreach ($chats as $chat) {
+
+            if ($chat->file) {
+
+                if (File::exists(uploadPath($chat->file))) {
+                    File::delete(uploadPath($chat->file));
+                }
+            }
+            $chat->delete();
+        }
     }
 
     private  static function markChatMessagesAsRead($otherUserId)
