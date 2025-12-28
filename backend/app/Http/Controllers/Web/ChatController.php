@@ -42,6 +42,7 @@ class ChatController extends Controller
 
     public function create()
     {
+
         if (empty(request()->message) && !request()->hasFile('chat_file')) {
             return response()->json(["status" => "error", "message" => "message or file required"], 400);
         }
@@ -51,8 +52,8 @@ class ChatController extends Controller
         if (request()->hasFile('chat_file')) {
             $file = request()->file('chat_file');
             $fileName = $file->getClientOriginalName();
-            $file->move(uploadPath(), $fileName);
-            $filePath = $fileName;
+            $file->move(uploadPath("/chat_files"), $fileName);
+            $filePath = "chat_files/$fileName";
         }
 
         $data = [

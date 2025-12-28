@@ -93,8 +93,7 @@ class Chat extends Model
     {
         Chat::markChatMessagesAsRead($otherUserId);
 
-        return Chat::where("to_user_id", user()->id)
-            ->where("from_user_id", $otherUserId)
+        return Chat::where("uid", ChatHelper::buildUid($otherUserId, user()->id))
             ->with("user")
             ->where("is_deleted", 0)
             ->notHiddenFor(user()->id)

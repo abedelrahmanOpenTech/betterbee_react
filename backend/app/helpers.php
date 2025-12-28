@@ -77,7 +77,7 @@ function booleanIcon($value)
     return '<svg class="text-danger" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16"><path fill="currentColor" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M3 8h10"/></svg>';
 }
 
-function uploadPath()
+function uploadPath($path = "")
 {
-    return public_path('/uploads');
+    return public_path("/upload/$path");
 }

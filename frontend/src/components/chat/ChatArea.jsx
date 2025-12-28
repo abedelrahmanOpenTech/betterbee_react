@@ -11,6 +11,7 @@ import { Fancybox } from "@fancyapps/ui";
 import EmojiPicker from 'emoji-picker-react';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { basename } from "../../utils/utils";
 
 const MySwal = withReactContent(Swal);
 
@@ -112,7 +113,7 @@ export default function ChatArea({ otherUserId, onClose }) {
     const emojiPickerRef = useRef(null);
 
     const { data: chatData, isLoading } = useChatMessagesQuery(otherUserId);
-    useChatUpdates(otherUserId, auth?.user?.id);
+    const { refetch: updateChatMessages } = useChatUpdates(otherUserId, auth?.user?.id);
 
     const { mutate: sendMessage, isPending: isSending } = useSendMessage();
     const { mutate: deleteMessage } = useDeleteMessage();
@@ -202,6 +203,7 @@ export default function ChatArea({ otherUserId, onClose }) {
 
                 sendMessage(formData, {
                     onSuccess: () => {
+                        updateChatMessages();
                         uploadedCount++;
                         if (uploadedCount === files.length) {
                             setIsUploading(false);
@@ -254,6 +256,7 @@ export default function ChatArea({ otherUserId, onClose }) {
         if (editingMessage) {
             editMessage({ messageId: editingMessage.id, message: message }, {
                 onSuccess: () => {
+                    updateChatMessages();
                     setEditingMessage(null);
                     setMessage("");
                     setReplyingTo(null);
@@ -274,6 +277,7 @@ export default function ChatArea({ otherUserId, onClose }) {
 
             sendMessage(formData, {
                 onSuccess: () => {
+                    updateChatMessages();
                     setMessage("");
                     setReplyingTo(null);
                     setIsEmojiPickerOpen(false);
@@ -310,6 +314,7 @@ export default function ChatArea({ otherUserId, onClose }) {
 
         hideMessage({ messageId }, {
             onSuccess: () => {
+                updateChatMessages();
                 toast.success(df('success'));
             },
             onError: () => {
@@ -337,6 +342,7 @@ export default function ChatArea({ otherUserId, onClose }) {
 
         deleteMessage({ messageId }, {
             onSuccess: () => {
+                updateChatMessages();
                 toast.success(df('success'));
             },
             onError: () => {
@@ -368,6 +374,7 @@ export default function ChatArea({ otherUserId, onClose }) {
 
                 sendMessage(formData, {
                     onSuccess: () => {
+                        updateChatMessages();
                         toast.success(df('voice_sent'));
                         scrollToBottom();
                     },
@@ -659,7 +666,9 @@ export default function ChatArea({ otherUserId, onClose }) {
                                                                 <FileIcon filename={message.file} />
                                                             </div>
                                                             <div className="text-truncate flex-grow-1">
-                                                                <div className="fw-bold small text-truncate text-dark" title={message.file}>{message.file}</div>
+
+
+                                                                <div className="fw-bold small text-truncate text-dark">{basename(message.file)}</div>
                                                             </div>
                                                         </div>
                                                         <a

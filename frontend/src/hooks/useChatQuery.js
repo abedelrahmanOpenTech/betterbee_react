@@ -8,7 +8,6 @@ export function useChatUsersQuery() {
         queryFn: async () => {
             return await http(apiUrl + "/chat/users");
         },
-        refetchInterval: 3000,
 
     });
 }
@@ -30,14 +29,10 @@ export function useSendMessage() {
         mutationFn: async (data) => {
             return await http(apiUrl + "/chat/create", {
                 method: "post",
-                body: data, // FormData or JSON
+                body: data,
             });
         },
-        onSuccess: (response, variables) => {
-            if (response.status === 'success') {
-                queryClient.invalidateQueries(["chat-messages", variables.get ? variables.get('to_user_id') : variables.to_user_id]);
-            }
-        }
+
     });
 }
 
@@ -47,7 +42,7 @@ export function useChatNotificationsQuery() {
         queryFn: async () => {
             return await http(apiUrl + "/chat/get-notification");
         },
-        refetchInterval: 5000, // Poll every 5 seconds
+        refetchInterval: 3000,
     });
 }
 
@@ -58,9 +53,6 @@ export function useMarkAsUnread() {
             return await http(apiUrl + `/chat/mark-as-unread/${otherUserId}`, {
                 method: "post"
             });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries(["chat-users"]);
         }
     });
 }
@@ -73,12 +65,7 @@ export function useDeleteMessage() {
                 method: "post"
             });
         },
-        onSuccess: (data, variables) => {
-            // Invalidate chat messages query. We need otherUserId, but it's not passed directly usually.
-            // We can invalidate all chat-messages or pass payload.
-            // Best to just invalidate all "chat-messages" queries for simplicity or refetch active.
-            queryClient.invalidateQueries(["chat-messages"]);
-        }
+
     });
 }
 
@@ -90,9 +77,7 @@ export function useHideMessage() {
                 method: "post"
             });
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries(["chat-messages"]);
-        }
+
     });
 }
 
@@ -104,9 +89,6 @@ export function useEditMessage() {
                 method: "post",
                 body: JSON.stringify({ message })
             });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries(["chat-messages"]);
         }
     });
 }
