@@ -1,0 +1,78 @@
+.bg-theme {
+    background-color: var(--theme-color) !important;
+}
+
+.bg-theme-light {
+    background-color: var(--theme-color-light) !important;
+}
+
+.text-theme {
+    color: var(--theme-color) !important;
+}
+
+.hover-splash {
+    transition: all 0.3s;
+}
+
+.hover-splash:hover {
+    background-color: #eee !important;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.required::after {
+    content: " * ";
+    color: red;
+}
+
+.text-white::placeholder {
+    color: white;
+}
+
+.hide {
+    display: none;
+}
+
+.no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.top-loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 5px;
+    width: 0%;
+    background-color: var(--theme-color);
+    z-index: 9999;
+    animation: loadingBar 2s infinite;
+}
+
+@keyframes loadingBar {
+    0% {
+        width: 0%;
+        left: 0%;
+    }
+
+    50% {
+        width: 50%;
+        left: 25%;
+    }
+
+    100% {
+        width: 0%;
+        left: 100%;
+    }
+}
+
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request.htmx-indicator {
+    display: inline-block;
+}
