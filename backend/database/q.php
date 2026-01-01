@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:8889
--- Generation Time: Dec 26, 2025 at 08:14 PM
+-- Generation Time: Jan 01, 2026 at 12:38 PM
 -- Server version: 8.0.40
 -- PHP Version: 8.3.14
 
@@ -37,6 +37,7 @@ CREATE TABLE `chats` (
 `is_read` tinyint(1) NOT NULL DEFAULT '0',
 `is_deleted` tinyint(1) NOT NULL DEFAULT '0',
 `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+`updated_at` timestamp NULL DEFAULT NULL,
 `reply_to` bigint UNSIGNED NOT NULL DEFAULT '0',
 `is_hidden` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
 `is_edited` tinyint(1) NOT NULL DEFAULT '0',
@@ -44,179 +45,127 @@ CREATE TABLE `chats` (
 `is_delete_reflected` tinyint(1) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `chats`
+-- Table structure for table `failed_jobs`
 --
 
-INSERT INTO `chats` (`id`, `from_user_id`, `to_user_id`, `uid`, `message`, `file`, `is_read`, `is_deleted`, `created_at`, `reply_to`, `is_hidden`, `is_edited`, `is_edit_reflected`, `is_delete_reflected`) VALUES
-(1, 2, 1, '1_2', 'hey', '', 1, 0, '2025-08-24 10:38:55', 0, '', 0, 0, 0),
-(2, 1, 2, '1_2', 'you', '', 1, 0, '2025-08-24 10:38:57', 0, '', 0, 0, 0),
-(3, 2, 1, '1_2', 'you', '', 1, 0, '2025-08-24 10:38:59', 0, '', 0, 0, 0),
-(4, 2, 1, '1_2', 'you', '', 1, 0, '2025-08-24 10:39:01', 0, '1', 0, 0, 0),
-(5, 1, 2, '1_2', 'Voice message', 'chat_files/5vdMa8zHYuknD8yCUH4lmCQgH3J8N8JwegKLezK8.webm', 1, 0, '2025-08-24 10:40:20', 0, '', 0, 0, 0),
-(6, 1, 3, '1_3', 'hey', '', 1, 0, '2025-08-24 10:57:38', 0, '1', 0, 0, 0),
-(7, 1, 3, '1_3', 'ho', '', 1, 0, '2025-08-24 10:57:40', 0, '', 0, 0, 0),
-(8, 1, 3, '1_3', 'hh', '', 0, 0, '2025-08-24 10:58:17', 0, '', 0, 0, 0),
-(13, 1, 2, '1_2', 'h', '', 1, 0, '2025-08-24 11:02:20', 0, '', 0, 0, 0),
-(14, 1, 2, '1_2', 'ff', '', 1, 0, '2025-08-24 11:10:14', 0, '', 0, 0, 0),
-(15, 1, 2, '1_2', 'fff', '', 1, 0, '2025-08-24 11:10:16', 0, '', 0, 0, 0),
-(16, 1, 2, '1_2', 'herlo\r\n# how are you?', '', 1, 0, '2025-08-24 11:14:35', 0, '', 0, 0, 0),
-(17, 1, 2, '1_2', 'image.png', 'chat_files/oLZ937pCiX8zAnSdLVSR8w8yNl1HoYU5gWDB3hAz.png', 1, 0, '2025-08-24 11:14:53', 0, '', 0, 0, 0),
-(18, 1, 2, '1_2', 'image.png', 'chat_files/2Pfmg2wYeQFFwwapOgkX32FCDCdWeYbN7RH8YvOj.png', 1, 0, '2025-08-24 11:14:56', 0, '', 0, 0, 0),
-(19, 1, 2, '1_2', 'image.png', 'chat_files/MZJXuDp22FHvjRRLr3Xtj7ThaAkoJG49y6bkDveS.png', 1, 0, '2025-08-24 11:14:57', 0, '', 0, 0, 0),
-(20, 1, 2, '1_2', 'image.png', 'chat_files/Tz8w8h1fCP959rZW6UpT9JRVCZddItx4m38P2qo0.png', 1, 0, '2025-08-24 11:14:59', 0, '', 0, 0, 0),
-(21, 1, 2, '1_2', 'image.png', 'chat_files/DMW7ngDvWXheKaTTJHH0SGa2amK53zb9x01mcwX2.png', 1, 0, '2025-08-24 11:15:01', 0, '', 0, 0, 0),
-(22, 1, 2, '1_2', 'q', '', 1, 0, '2025-08-24 11:15:03', 0, '', 0, 0, 0),
-(23, 1, 2, '1_2', 'qqq', '', 1, 0, '2025-08-24 11:15:05', 0, '', 0, 0, 0),
-(24, 1, 2, '1_2', 'image.png', 'chat_files/udEUMqfK0byDj3osbAQTl7OUEw0h72NuGEEzy5HD.png', 1, 0, '2025-08-24 11:15:08', 0, '', 0, 0, 0),
-(25, 1, 2, '1_2', 'Voice message', 'chat_files/NEAMgqnPMZ7vS2bazuESPKiKk5U7DZ14BLMJPw4L.webm', 1, 0, '2025-08-24 11:27:00', 0, '', 0, 0, 0),
-(26, 1, 2, '1_2', 'Voice message', 'chat_files/l0G1mRtdv7p0eKuPEZeEOitRzrbZLDvq7eFfQURe.webm', 1, 0, '2025-08-24 11:27:11', 0, '', 0, 0, 0),
-(27, 1, 2, '1_2', 'k', 'chat_files/j7OyTJngscod7vNQosBbfSnBI5NrsBSE6Goyqtu2.webm', 1, 0, '2025-08-24 11:27:12', 0, '', 0, 0, 0),
-(28, 1, 2, '1_2', 'k', 'chat_files/fnc11NifzqYWku4MbROf8ZN867WMPaQW3xLz6u7A.webm', 1, 0, '2025-08-24 11:27:15', 0, '', 0, 0, 0),
-(29, 1, 2, '1_2', 'u', '', 1, 0, '2025-08-24 11:27:26', 0, '', 0, 0, 0),
-(30, 1, 2, '1_2', 'm', '', 1, 0, '2025-08-24 11:27:29', 0, '', 0, 0, 0),
-(31, 1, 2, '1_2', 'm', '', 1, 0, '2025-08-24 11:27:31', 0, '', 0, 0, 0),
-(32, 1, 2, '1_2', 'ehhehehe', '', 1, 0, '2025-08-24 11:30:32', 0, '', 0, 0, 0),
-(33, 1, 2, '1_2', 'Voice message', 'chat_files/P0qpDwK75oovrYhZIZ67AR1tJGiliWcSGSd33ikD.webm', 1, 0, '2025-08-24 11:30:40', 0, '', 0, 0, 0),
-(34, 1, 2, '1_2', 'ww', '', 1, 0, '2025-08-24 11:30:44', 0, '', 0, 0, 0),
-(35, 1, 3, '1_3', 'ff', '', 0, 0, '2025-08-24 11:37:10', 0, '', 0, 0, 0),
-(36, 1, 3, '1_3', 'ff', '', 0, 0, '2025-08-24 11:37:11', 0, '', 0, 0, 0),
-(37, 1, 3, '1_3', 'Voice message', 'chat_files/UT6yfXueOq70kHHk7pqRiATVPhCGnbNM1uvF86Xh.webm', 0, 0, '2025-08-24 11:37:15', 0, '', 0, 0, 0),
-(38, 1, 3, '1_3', 'd', '', 0, 0, '2025-08-24 11:37:26', 0, '', 0, 0, 0),
-(39, 1, 3, '1_3', '😃😃😃😃', '', 0, 0, '2025-08-24 11:39:12', 0, '', 0, 0, 0),
-(40, 1, 3, '1_3', '😄😄😄', '', 0, 0, '2025-08-24 11:39:14', 0, '', 0, 0, 0),
-(41, 1, 3, '1_3', 'dfgfd\r\nFGH\r\nFGHfgh', '', 0, 0, '2025-08-24 11:40:33', 0, '', 0, 0, 0),
-(42, 1, 3, '1_3', 'hey', '', 0, 0, '2025-08-24 12:01:37', 0, '', 0, 0, 0),
-(43, 1, 3, '1_3', 'hey', '', 0, 0, '2025-08-24 12:01:39', 0, '', 0, 0, 0),
-(44, 1, 2, '1_2', '🕤️🕖️', '', 1, 0, '2025-08-24 12:06:57', 0, '', 0, 0, 0),
-(45, 1, 2, '1_2', '😆😆', '', 1, 0, '2025-08-24 12:07:32', 0, '', 0, 0, 0),
-(46, 1, 2, '1_2', '1.jpeg', 'chat_files/RA064F5h7sGWHVYySRE053DHoMPNtqlwxzxBeX3Q.jpg', 1, 0, '2025-08-24 12:07:35', 0, '', 0, 0, 0),
-(47, 1, 2, '1_2', 'a', '', 1, 0, '2025-08-24 12:59:18', 0, '', 0, 0, 0),
-(48, 1, 2, '1_2', 'k', '', 1, 0, '2025-08-26 18:02:05', 0, '', 0, 0, 0),
-(49, 1, 2, '1_2', '😄😄😄😄', '', 1, 0, '2025-08-26 18:07:55', 0, '', 0, 0, 0),
-(50, 1, 2, '1_2', '😁😁😁😁\\', '', 1, 0, '2025-08-26 18:07:58', 0, '', 0, 0, 0),
-(51, 1, 2, '1_2', '`aaa`', '', 1, 0, '2025-08-26 18:08:09', 0, '', 0, 0, 0),
-(52, 1, 2, '1_2', '😂😂😂😂😂', '', 1, 0, '2025-08-26 18:19:40', 0, '', 0, 0, 0),
-(53, 1, 2, '1_2', '😊😊😊😊😊👆👆', '', 1, 0, '2025-08-26 18:19:49', 0, '', 0, 0, 0),
-(54, 1, 2, '1_2', '😁😁😁😁😁😁😁😁', '', 1, 0, '2025-08-26 18:21:36', 0, '', 0, 0, 0),
-(55, 1, 2, '1_2', '😂😂😂😂', '', 1, 0, '2025-08-26 18:34:14', 0, '', 0, 0, 0),
-(56, 1, 2, '1_2', 'sdfsdf\r\nSDF\r\nDSF\r\nDS\r\nFDSF🙄🙄🙄', '', 1, 0, '2025-08-26 18:42:05', 0, '', 0, 0, 0),
-(57, 1, 2, '1_2', '👆', '', 1, 0, '2025-08-26 18:42:14', 0, '', 0, 0, 0),
-(58, 1, 2, '1_2', '👆👆👆👆👆', '', 1, 0, '2025-08-26 18:47:30', 0, '', 0, 0, 0),
-(59, 1, 2, '1_2', '👆', '', 1, 0, '2025-08-26 18:50:42', 0, '', 0, 0, 0),
-(60, 1, 2, '1_2', '# 👆', '', 1, 0, '2025-08-26 18:50:59', 0, '', 0, 0, 0),
-(61, 1, 3, '1_3', 'SCR-20250830-hmsz.png', 'chat_files/cCykN5J0zTXWsV4T0Jh2I7SlBNDICpLhcl3orNX8.png', 0, 0, '2025-08-30 04:55:49', 0, '', 0, 0, 0),
-(62, 1, 3, '1_3', 'SCR-20250830-hmsz.png', 'chat_files/tlv4mkxLwzhnG7TTaEdfdAKqCHDXbmeL1HPxDXPh.png', 0, 0, '2025-08-30 04:57:30', 0, '', 0, 0, 0),
-(63, 1, 3, '1_3', 'SCR-20250830-hmsz.png', 'chat_files/X8Oo04xgaUnU1Mwr7zBaQ1p9haktDNjjKv3IcPdh.png', 0, 0, '2025-08-30 04:57:39', 0, '', 0, 0, 0),
-(64, 1, 3, '1_3', 'SCR-20250830-hmsz.png', 'chat_files/OuBzdikZb0VfxaqcUc3WVLW8MbLgoUssioiOu7nL.png', 0, 0, '2025-08-30 04:58:08', 0, '', 0, 0, 0),
-(65, 1, 3, '1_3', 'cc', '', 0, 0, '2025-08-30 04:58:11', 0, '', 0, 0, 0),
-(66, 1, 3, '1_3', '-', 'chat_files/8OnboQmxVrtnLLTwFBZyo1tURzQ3YE0YBr1eMyQ5.png', 0, 0, '2025-08-30 05:00:31', 0, '', 0, 0, 0),
-(67, 1, 3, '1_3', '&nbsp;', 'chat_files/3mzhOiWOS9rzXDG0SGehD3OlDdOTOObvAecni2kq.png', 0, 0, '2025-08-30 05:00:48', 0, '', 0, 0, 0),
-(68, 1, 3, '1_3', 'SCR-20250830-hmsz.png', 'chat_files/gNBixOsw7HqfPFt4gwFeiFVduqIZoBgtQsTTqHbk.png', 0, 0, '2025-08-30 05:02:53', 0, '', 0, 0, 0),
-(69, 1, 3, '1_3', 'ff', '', 0, 0, '2025-08-30 05:06:24', 0, '', 0, 0, 0),
-(70, 1, 3, '1_3', 'ok', '', 0, 0, '2025-08-30 05:08:35', 0, '', 0, 0, 0),
-(71, 1, 3, '1_3', '&nbsp;', 'chat_files/gShnp4UjJPEzdDo5WPWvE1I7xO76KH4AqvG7VCWM.png', 0, 0, '2025-08-30 05:18:52', 0, '', 0, 0, 0),
-(72, 1, 3, '1_3', 'ok', 'chat_files/ZJn6Js6OIsBXTDU3AtwabuY8uDOJnmJOcKIVI9R2', 0, 0, '2025-08-30 05:21:49', 0, '', 0, 0, 0),
-(73, 1, 3, '1_3', '&nbsp;', 'chat_files/6MjQmPpKmhd1LM27G21O9LFFZAWE61fUL1HUa0HC', 0, 0, '2025-08-30 05:23:21', 0, '', 0, 0, 0),
-(74, 1, 3, '1_3', '&nbsp;', 'chat_files/tI3Gp4s7ACOxQ4fHVF2RM6uN2qqwAt7NukM9nQNs.png', 0, 0, '2025-08-30 05:24:08', 0, '', 0, 0, 0),
-(75, 1, 3, '1_3', '&nbsp;', 'chat_files/GDKltFtBqlRCYPAH1RY16qZlBktKdrocjZOzTw2A.json', 0, 0, '2025-08-30 05:24:16', 0, '', 0, 0, 0),
-(76, 1, 3, '1_3', 'composer.json', 'chat_files/Y5q1uLLU99FktIuypPf9k2hcwzrliXKske52astt.json', 0, 0, '2025-08-30 05:25:53', 0, '', 0, 0, 0),
-(77, 1, 3, '1_3', 'logo.png', 'chat_files/RUFm06iJnxZ82PD3y1nEGyw1qZ8UhyvTmI738OI7.png', 0, 0, '2025-08-30 05:26:09', 0, '', 0, 0, 0),
-(78, 1, 3, '1_3', 'look at this 👇\r\nlogo2.png', 'chat_files/MqUYYohFMeADmaKR4B5otUoL8YsH5n1fGWgX7OKV.png', 0, 0, '2025-08-30 05:26:25', 0, '', 0, 0, 0),
-(79, 1, 3, '1_3', 'ok\r\n \r\n [robots.txt]', 'chat_files/lI2aNa5JWfkdZxdT5INaQFpwtBFaW2oKCnTZGuYo.txt', 0, 0, '2025-08-30 05:26:56', 0, '', 0, 0, 0),
-(80, 1, 3, '1_3', '😄😄😄😄😄🗻🗻🗻\r\n \r\n [README.md]', 'chat_files/Z9mE3hqdAO4kbRwx3BA17g0LR62HJ5hJIrujIfcO.html', 0, 0, '2025-08-30 05:30:00', 0, '', 0, 0, 0),
-(81, 1, 3, '1_3', 'dfghfg\r\n \r\n [package.json]', 'chat_files/YIyQLs2kzCFxsvK9DG2Ipbe6iZuAdd3NHA8iRAyI.json', 0, 0, '2025-08-30 05:30:49', 0, '', 0, 0, 0),
-(82, 1, 3, '1_3', 'Ghhh', '', 0, 0, '2025-08-30 06:07:11', 0, '', 0, 0, 0),
-(83, 1, 3, '1_3', 'Hhh', '', 0, 0, '2025-08-30 06:07:13', 0, '', 0, 0, 0),
-(84, 1, 3, '1_3', 'Kkk', '', 0, 0, '2025-08-30 06:07:26', 0, '', 0, 0, 0),
-(85, 1, 3, '1_3', 'Hfjf', '', 0, 0, '2025-08-30 06:11:40', 0, '', 0, 0, 0),
-(86, 1, 3, '1_3', 'Jrjrjrr', '', 0, 0, '2025-08-30 06:11:42', 0, '', 0, 0, 0),
-(87, 1, 3, '1_3', 'Hdjdjffjff\r\nJfkfkf\r\nJfjfjf\r\nJfjfjfjf', '', 0, 0, '2025-08-30 06:13:56', 0, '', 0, 0, 0),
-(88, 1, 3, '1_3', 'lll\r\n\r\nfdff', '', 0, 0, '2025-08-30 06:14:13', 0, '', 0, 0, 0),
-(89, 1, 3, '1_3', 'sdfdsf', '', 0, 0, '2025-08-30 06:14:15', 0, '', 0, 0, 0),
-(90, 1, 3, '1_3', 'sdfdsf', '', 0, 0, '2025-08-30 06:16:42', 0, '', 0, 0, 0),
-(91, 1, 3, '1_3', 'sdfgdsf\r\nsdfdsf😃😃\r\n \r\n [artisan]', 'chat_files/NC5OxfouvkbWwHukIt0XyKrgAlAazsFwqixHayHB.txt', 0, 0, '2025-08-30 06:16:50', 0, '', 0, 0, 0),
-(92, 1, 3, '1_3', '[artisan]', 'chat_files/8Jf6HYa6IbRiQ28srY7okN4Nfob4ssheOV6LDZ6X.txt', 0, 0, '2025-08-31 10:17:23', 0, '', 0, 0, 0),
-(93, 1, 3, '1_3', '[README.md]', 'chat_files/ysmpVoBRjaxUAT7HmBLhM4UTsmxxNkYkE1hRBlc7.html', 0, 0, '2025-08-31 10:17:42', 0, '', 0, 0, 0),
-(94, 1, 3, '1_3', 'json file\r\n \r\n [package.json]', 'chat_files/bIwWFZcuiht9XTnMHnx5pXifGyfYlT9O3yXWLIEl.json', 0, 0, '2025-08-31 10:17:50', 0, '', 0, 0, 0),
-(95, 2, 1, '1_2', 'ok', '', 1, 0, '2025-10-28 04:20:26', 0, '', 0, 0, 0),
-(96, 1, 2, '1_2', 'hey', '', 1, 0, '2025-10-28 04:25:46', 0, '', 0, 0, 0),
-(97, 1, 2, '1_2', 'how are you!', '', 1, 0, '2025-10-28 04:25:49', 0, '', 0, 0, 0),
-(98, 1, 2, '1_2', '# 😎', '', 1, 0, '2025-10-28 04:25:56', 0, '', 0, 0, 0),
-(99, 2, 1, '1_2', 'fine bro', '', 1, 0, '2025-10-28 04:26:02', 0, '', 0, 0, 0),
-(102, 2, 1, '1_2', 'k', '', 1, 0, '2025-10-28 04:35:26', 0, '', 0, 0, 0),
-(104, 2, 1, '1_2', 'mm', '', 1, 0, '2025-10-28 04:37:58', 0, '', 0, 0, 0),
-(105, 2, 1, '1_2', 'mmm', '', 1, 0, '2025-10-28 04:38:04', 0, '', 0, 0, 0),
-(106, 2, 1, '1_2', 'ii', '', 1, 0, '2025-10-28 04:38:21', 0, '', 0, 0, 0),
-(107, 2, 1, '1_2', 'jj', '', 1, 0, '2025-10-28 04:38:30', 0, '', 0, 0, 0),
-(108, 2, 1, '1_2', 'ii', '', 1, 0, '2025-10-28 04:38:35', 0, '', 0, 0, 0),
-(109, 2, 1, '1_2', 'kk', '', 1, 0, '2025-10-28 04:38:52', 0, '', 0, 0, 0),
-(110, 2, 1, '1_2', 'mmm', '', 1, 0, '2025-10-28 04:40:31', 0, '', 0, 0, 0),
-(111, 2, 1, '1_2', 'iiii', '', 1, 0, '2025-10-28 04:40:38', 0, '', 0, 0, 0),
-(112, 2, 1, '1_2', 'ii', '', 1, 0, '2025-10-28 04:40:49', 0, '', 0, 0, 0),
-(113, 2, 1, '1_2', 'view', '', 1, 0, '2025-10-28 04:43:43', 0, '', 0, 0, 0),
-(115, 2, 1, '1_2', 'm', '', 1, 0, '2025-10-28 04:44:30', 113, '', 0, 0, 0),
-(116, 1, 2, '1_2', 'ok', '', 1, 0, '2025-10-28 04:44:36', 0, '', 0, 0, 0),
-(117, 2, 1, '1_2', '# 😎', '', 1, 0, '2025-10-28 04:44:42', 0, '', 0, 0, 0),
-(118, 2, 1, '1_2', 'm', '', 1, 0, '2025-10-28 04:46:38', 0, '', 0, 0, 0),
-(119, 1, 2, '1_2', 'k', '', 1, 0, '2025-10-28 04:46:40', 0, '', 0, 0, 0),
-(120, 2, 1, '1_2', 'i', '', 1, 0, '2025-10-28 04:46:54', 0, '', 0, 0, 0),
-(121, 1, 2, '1_2', 'qwen', '', 1, 0, '2025-10-28 04:47:01', 0, '', 0, 0, 0),
-(122, 1, 2, '1_2', 'bb', '', 1, 0, '2025-10-28 04:47:06', 0, '', 0, 0, 0),
-(123, 1, 2, '1_2', 'ii', '', 1, 0, '2025-10-28 04:47:07', 0, '', 0, 0, 0),
-(124, 2, 1, '1_2', 'n', '', 1, 0, '2025-10-28 04:47:24', 0, '', 0, 0, 0),
-(125, 2, 1, '1_2', 'm', '', 1, 0, '2025-10-28 04:47:28', 0, '', 0, 0, 0),
-(127, 2, 1, '1_2', 'k', '', 1, 0, '2025-10-28 04:52:01', 0, '', 0, 0, 0),
-(128, 2, 1, '1_2', 'k', '', 1, 0, '2025-10-28 04:54:07', 0, '', 0, 0, 0),
-(129, 1, 2, '1_2', 'hhh', '', 1, 0, '2025-10-28 04:54:11', 0, '', 0, 0, 0),
-(130, 1, 2, '1_2', 'nn', '', 1, 0, '2025-10-28 04:54:13', 0, '', 0, 0, 0),
-(131, 2, 1, '1_2', 'i', '', 1, 0, '2025-10-28 04:54:14', 0, '', 0, 0, 0),
-(133, 2, 1, '1_2', 'q', '', 1, 0, '2025-10-28 04:54:19', 0, '', 0, 0, 0),
-(134, 2, 1, '1_2', 'mm', '', 1, 0, '2025-10-28 04:54:30', 0, '', 0, 0, 0),
-(136, 2, 1, '1_2', '123', '', 1, 0, '2025-10-28 04:54:35', 0, '', 0, 0, 0),
-(137, 2, 1, '1_2', 'nn', '', 1, 0, '2025-10-28 04:54:48', 0, '', 0, 0, 0),
-(138, 2, 1, '1_2', 'nn', '', 1, 0, '2025-10-28 04:54:49', 0, '', 0, 0, 0),
-(139, 2, 1, '1_2', 'nn', '', 1, 0, '2025-10-28 04:54:50', 0, '2', 0, 0, 0),
-(140, 2, 1, '1_2', 'k', '', 1, 0, '2025-10-28 04:54:59', 0, '', 0, 0, 0),
-(141, 2, 1, '1_2', 'k', '', 1, 0, '2025-10-28 04:55:00', 0, '', 0, 0, 0),
-(143, 2, 1, '1_2', 'new view', '', 1, 0, '2025-10-28 04:59:07', 0, '', 0, 0, 0),
-(144, 1, 3, '1_3', 'hhhhhh', '', 0, 0, '2025-12-24 14:51:38', 0, '', 0, 0, 0),
-(145, 1, 3, '1_3', 'hello', '', 0, 0, '2025-12-24 15:49:27', 0, '', 0, 0, 0),
-(146, 1, 3, '1_3', 'hh', 'chat_files/QfgdvtS4PUReassJGy2lV8fNr95bkvaRjfxzzljA.png', 0, 0, '2025-12-24 15:57:30', 0, '', 0, 0, 0),
-(147, 1, 3, '1_3', 'o', 'chat_files/RD1dImqh2kPJDfkyBMDiaLRmHCAyr49ofbjL7GHM', 0, 0, '2025-12-24 15:57:43', 0, '', 0, 0, 0),
-(148, 1, 3, '1_3', '3', 'chat_files/nlPRaI5iJyG2fKF8NrRUtXURvGgnzJMKVRWd4UtU.txt', 0, 0, '2025-12-24 16:01:32', 0, '', 0, 0, 0),
-(149, 1, 5, '1_5', 'xffg\r\nDFG\r\nDFGD\r\nFG\r\nDF', '', 0, 0, '2025-12-24 16:04:05', 0, '1', 0, 0, 0),
-(150, 1, 6, '1_6', NULL, 'chat_files/TiOUQzzesJOvy2RHMwsVHQwLM2AZAZUMo0GVd84l.png', 0, 0, '2025-12-24 16:19:49', 0, '', 0, 0, 0),
-(151, 1, 6, '1_6', NULL, 'chat_files/Ff2QHIQNPREFT7QyXqcZfGB8iPrecc1qv3xeGt6e.txt', 0, 0, '2025-12-24 16:19:49', 0, '', 0, 0, 0),
-(152, 1, 6, '1_6', NULL, 'chat_files/uwFUV5SapgLsmKc30x2dOC2qgMgaxa2MHNxqbzyi.png', 0, 0, '2025-12-24 16:19:54', 0, '', 0, 0, 0),
-(153, 1, 2, '1_2', 'm', '', 1, 0, '2025-12-24 16:22:30', 0, '', 0, 0, 0),
-(154, 2, 5, '2_5', 'hello', '', 0, 0, '2025-12-24 16:30:00', 0, '', 0, 0, 0),
-(155, 2, 5, '2_5', 'ju', '', 0, 0, '2025-12-24 16:30:05', 0, '', 0, 0, 0),
-(156, 1, 6, '1_6', '😄😄😄😄😄', '', 0, 0, '2025-12-24 16:38:14', 0, '', 0, 0, 0),
-(157, 2, 1, '1_2', 'lllll', '', 1, 0, '2025-12-24 16:42:16', 0, '', 0, 0, 0),
-(158, 2, 1, '1_2', 'sddfds', '', 1, 0, '2025-12-24 16:42:22', 0, '', 0, 0, 0),
-(159, 2, 1, '1_2', 'hello\r\nbrother', '', 1, 0, '2025-12-24 16:46:06', 0, '', 0, 0, 0),
-(160, 2, 1, '1_2', 'he', '', 1, 0, '2025-12-24 16:46:12', 0, '', 0, 0, 0),
-(161, 2, 1, '1_2', 'k', '', 1, 0, '2025-12-24 16:46:23', 0, '', 0, 0, 0),
-(162, 1, 2, '1_2', 'o', '', 1, 0, '2025-12-24 16:49:36', 0, '', 0, 0, 0),
-(165, 2, 1, '1_2', 'd', '', 1, 0, '2025-12-24 16:54:02', 0, '2', 0, 0, 0),
-(166, 1, 2, '1_2', 'k', '', 1, 0, '2025-12-24 17:01:06', 0, '', 0, 0, 0),
-(167, 1, 2, '1_2', 'k', '', 1, 0, '2025-12-24 17:02:56', 0, '', 0, 0, 0),
-(168, 1, 3, '1_3', NULL, 'chat_files/BEzg2cnh0EIcsfmbdf1n2mRnkbXyzLTdnnd3w0CN.txt', 0, 0, '2025-12-26 15:24:30', 0, '', 0, 0, 0),
-(169, 1, 6, '1_6', '^^^', '', 0, 0, '2025-12-26 16:26:51', 156, '', 0, 0, 0),
-(170, 1, 6, '1_6', '#cool4', '', 0, 0, '2025-12-26 16:27:00', 169, '', 1, 0, 0),
-(171, 1, 2, '1_2', 'First messageq', '', 1, 0, '2025-12-26 16:48:49', 0, '', 1, 0, 0),
-(172, 1, 2, '1_2', 'zzzz11', '', 1, 0, '2025-12-26 16:51:29', 0, '', 1, 0, 0),
-(174, 1, 2, '1_2', 'sdfdsfaaaa', '', 1, 0, '2025-12-26 19:54:16', 0, '', 1, 0, 0),
-(176, 1, 2, '1_2', 'qqqq', '', 1, 0, '2025-12-26 19:56:34', 0, '', 0, 0, 0),
-(177, 1, 2, '1_2', 'sdfqqq11', '', 1, 0, '2025-12-26 20:00:50', 0, '', 1, 0, 0),
-(178, 1, 2, '1_2', '111zzz', '', 1, 0, '2025-12-26 20:08:12', 0, '', 1, 0, 0),
-(180, 2, 1, '1_2', 'll', '', 1, 0, '2025-12-26 20:09:03', 0, '', 0, 0, 0),
-(181, 2, 1, '1_2', 'jhj', '', 1, 0, '2025-12-26 20:09:06', 0, '', 0, 0, 0),
-(182, 1, 2, '1_2', '123', '', 1, 0, '2025-12-26 20:09:26', 0, '1', 0, 0, 0),
-(183, 2, 1, '1_2', '456', '', 1, 0, '2025-12-26 20:09:35', 0, '', 0, 0, 0),
-(185, 1, 2, '1_2', 'd', '', 1, 0, '2025-12-26 20:10:35', 0, '', 0, 0, 0),
-(186, 2, 1, '1_2', 'me', '', 1, 0, '2025-12-26 20:10:53', 0, '', 0, 0, 0);
+CREATE TABLE `failed_jobs` (
+`id` bigint UNSIGNED NOT NULL,
+`uuid` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+`connection` text COLLATE utf8mb4_unicode_ci NOT NULL,
+`queue` text COLLATE utf8mb4_unicode_ci NOT NULL,
+`payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+`exception` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+`failed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `last_chats`
+--
+
+CREATE TABLE `last_chats` (
+`id` bigint UNSIGNED NOT NULL,
+`original_chat_id` bigint NOT NULL,
+`from_user_id` bigint UNSIGNED NOT NULL,
+`to_user_id` bigint UNSIGNED NOT NULL,
+`uid` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+`message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+`file` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+`reply_to` bigint UNSIGNED NOT NULL DEFAULT '0',
+`is_hidden` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `migrations`
+--
+
+CREATE TABLE `migrations` (
+`id` int UNSIGNED NOT NULL,
+`migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+`batch` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `password_reset_tokens`
+--
+
+CREATE TABLE `password_reset_tokens` (
+`email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+`token` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+`created_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `personal_access_tokens`
+--
+
+CREATE TABLE `personal_access_tokens` (
+`id` bigint UNSIGNED NOT NULL,
+`tokenable_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+`tokenable_id` bigint UNSIGNED NOT NULL,
+`name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+`token` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+`abilities` text COLLATE utf8mb4_unicode_ci,
+`last_used_at` timestamp NULL DEFAULT NULL,
+`expires_at` timestamp NULL DEFAULT NULL,
+`created_at` timestamp NULL DEFAULT NULL,
+`updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `settings`
+--
+
+CREATE TABLE `settings` (
+`id` bigint UNSIGNED NOT NULL,
+`json` longtext COLLATE utf8mb4_unicode_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+`id` bigint UNSIGNED NOT NULL,
+`name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+`email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+`email_verified_at` timestamp NULL DEFAULT NULL,
+`password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+`remember_token` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+`created_at` timestamp NULL DEFAULT NULL,
+`updated_at` timestamp NULL DEFAULT NULL,
+`last_seen` datetime DEFAULT NULL,
+`profile` text COLLATE utf8mb4_unicode_ci,
+`type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+`is_disabled` tinyint(1) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_notification_subscriptions`
+--
+
+CREATE TABLE `user_notification_subscriptions` (
+`id` int NOT NULL,
+`user_id` int NOT NULL,
+`subscription` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Indexes for dumped tables
@@ -233,6 +182,67 @@ ADD KEY `chats_reply_to_index` (`reply_to`),
 ADD KEY `chats_is_hidden_index` (`is_hidden`);
 
 --
+-- Indexes for table `failed_jobs`
+--
+ALTER TABLE `failed_jobs`
+ADD PRIMARY KEY (`id`),
+ADD UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`);
+
+--
+-- Indexes for table `last_chats`
+--
+ALTER TABLE `last_chats`
+ADD PRIMARY KEY (`id`),
+ADD KEY `chats_reply_to_index` (`reply_to`),
+ADD KEY `chats_is_hidden_index` (`is_hidden`),
+ADD KEY `original_chat_id` (`original_chat_id`),
+ADD KEY `from_user_id` (`from_user_id`),
+ADD KEY `to_user_id` (`to_user_id`),
+ADD KEY `uid` (`uid`);
+
+--
+-- Indexes for table `migrations`
+--
+ALTER TABLE `migrations`
+ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `password_reset_tokens`
+--
+ALTER TABLE `password_reset_tokens`
+ADD PRIMARY KEY (`email`);
+
+--
+-- Indexes for table `personal_access_tokens`
+--
+ALTER TABLE `personal_access_tokens`
+ADD PRIMARY KEY (`id`),
+ADD UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
+ADD KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`);
+
+--
+-- Indexes for table `settings`
+--
+ALTER TABLE `settings`
+ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+ADD PRIMARY KEY (`id`),
+ADD UNIQUE KEY `users_email_unique` (`email`),
+ADD KEY `users_type_index` (`type`),
+ADD KEY `users_is_disabled_index` (`is_disabled`);
+
+--
+-- Indexes for table `user_notification_subscriptions`
+--
+ALTER TABLE `user_notification_subscriptions`
+ADD PRIMARY KEY (`id`),
+ADD KEY `user_id` (`user_id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -240,7 +250,49 @@ ADD KEY `chats_is_hidden_index` (`is_hidden`);
 -- AUTO_INCREMENT for table `chats`
 --
 ALTER TABLE `chats`
-MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=187;
+MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `failed_jobs`
+--
+ALTER TABLE `failed_jobs`
+MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `last_chats`
+--
+ALTER TABLE `last_chats`
+MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `migrations`
+--
+ALTER TABLE `migrations`
+MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `personal_access_tokens`
+--
+ALTER TABLE `personal_access_tokens`
+MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `settings`
+--
+ALTER TABLE `settings`
+MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `user_notification_subscriptions`
+--
+ALTER TABLE `user_notification_subscriptions`
+MODIFY `id` int NOT NULL AUTO_INCREMENT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

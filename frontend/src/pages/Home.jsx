@@ -1,44 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Dropdown } from "react-bootstrap";
-import { df } from "../../utils/lang";
-import useAuth from "../../stores/useAuth";
-import { useChatUsersQuery, useChatNotificationsQuery, useMarkAsUnread } from "../../hooks/useChatQuery";
-import Spinner from "../../components/ui/Spinner";
-import { useAuthInit } from "../../hooks/useAuthQuery";
-import { uploadsUrl } from "../../config";
-import ChatArea from "../../components/chat/ChatArea";
-import ProfileModal from "../../components/chat/ProfileModal";
-import SettingsModal from "../../components/chat/SettingsModal";
+import { df } from "../utils/lang";
+import useAuth from "../stores/useAuth";
+import { useChatUsers, useMarkChatAsUnread } from "../hooks/useChatQuery";
+import Spinner from "../components/ui/Spinner";
+import { uploadsUrl } from "../config";
+import ChatArea from "../components/chat/ChatArea";
+import ProfileModal from "../components/chat/ProfileModal";
+import SettingsModal from "../components/chat/SettingsModal";
 import toast from "react-hot-toast";
+import { initializePushNotifications } from "../utils/notification";
 
-const CustomToggle = ({ children, onClick, ref }) => (
-    <div
-        ref={ref}
-        onClick={(event) => {
-            event.preventDefault();
-            onClick(event);
-        }}
-        className="cursor-pointer"
-    >
-        {children}
-    </div>
-);
+import { CustomToggle, ThreeDotsToggle } from "../utils/chatUtils";
 
-const ThreeDotsToggle = ({ onClick, ref }) => (
-    <span
-        ref={ref}
-        onClick={(event) => {
-            event.preventDefault();
-            onClick(event);
-        }}
-        className="pointer hover-splash p-2 rounded d-flex align-items-center justify-content-center"
-    >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M14 18a2 2 0 1 1-4 0a2 2 0 0 1 4 0m0-6a2 2 0 1 1-4 0a2 2 0 0 1 4 0m-2-4a2 2 0 1 0 0-4a2 2 0 0 0 0 4" />
-        </svg>
-    </span>
-);
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Home() {
     const auth = useAuth();
@@ -48,26 +24,39 @@ export default function Home() {
     const [showProfile, setShowProfile] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
 
-    const { data: authData, isLoading: isAuthLoading } = useAuthInit();
-    const { data: usersData, isLoading: isUsersLoading } = useChatUsersQuery();
-    const { data: notificationsData } = useChatNotificationsQuery();
-    const { mutate: markAsUnread } = useMarkAsUnread();
 
-    const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
+    useEffect(() => {
+        initializePushNotifications();
+    }, []);
 
-    const onlineUsers = notificationsData?.onlineUsers || [];
-    const unreadMessages = notificationsData?.unreadMessages || {};
 
-    const filteredUsers = (usersData?.users || []).map(user => {
-        const unreadCount = unreadMessages[user.id] ? unreadMessages[user.id].length : 0;
-        return {
-            ...user,
-            is_online: onlineUsers.some(onlineUser => onlineUser.id === user.id) || user.is_online,
-            unread_count: unreadCount
-        };
-    }).filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const { data: usersData, isLoading: isUsersLoading, refetch: fetchChatUsers } = useChatUsers();
+
+    const { mutate: markAsUnread } = useMarkChatAsUnread();
+
+    const audioRef = useRef(new Audio('/sounds/notification.mp3'));
+
+    const filteredUsers = (usersData?.users || [])
+        .filter(user => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    // Calculate total unread for audio trigger (optional, basic implementation)
+    const totalUnread = (usersData?.users || []).reduce((acc, user) => acc + (parseInt(user.unread_count) || 0), 0);
+    const prevTotalUnreadRef = useRef(0);
+
+    useEffect(() => {
+        if (totalUnread > prevTotalUnreadRef.current) {
+            audioRef.current.play().catch(event => { });
+            if (navigator.setAppBadge) {
+                navigator.setAppBadge(totalUnread).catch(() => { });
+            }
+        }
+        prevTotalUnreadRef.current = totalUnread;
+
+        if (totalUnread === 0 && navigator.clearAppBadge) {
+            navigator.clearAppBadge().catch(() => { });
+        }
+
+    }, [totalUnread]);
 
     const handleMarkAsUnread = (userId) => {
         markAsUnread(userId, {
@@ -83,19 +72,24 @@ export default function Home() {
         });
     };
 
-    useEffect(() => {
-        if (!isAuthLoading && !auth.accessToken) {
-            navigate("/login");
-        }
-    }, [isAuthLoading, auth.accessToken]);
 
     useEffect(() => {
-        if (notificationsData?.newMessageFound) {
-            audioRef.current.play().catch(event => { });
-        }
-    }, [notificationsData?.newMessageFound]);
+        const channel = new BroadcastChannel('chat_updates_channel');
+        channel.onmessage = (event) => {
+            if (event.data.type === 'PUSH_NOTIFICATION_RECEIVED') {
+                fetchChatUsers();
+            }
+        };
 
-    if (isAuthLoading || isUsersLoading) {
+        return () => {
+
+            channel.close();
+        };
+    }, []);
+
+
+
+    if (isUsersLoading) {
         return (
             <div className="vh-100 d-flex align-items-center justify-content-center bg-grey">
                 <Spinner />

@@ -2,8 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiUrl } from "../config";
 import { http } from "../utils/http";
 
-export function useChatUsersQuery() {
+export function useChatUsers() {
     return useQuery({
+        refetchInterval: 10000,
         queryKey: ["chat-users"],
         queryFn: async () => {
             return await http(apiUrl + "/chat/users");
@@ -12,7 +13,7 @@ export function useChatUsersQuery() {
     });
 }
 
-export function useChatMessagesQuery(otherUserId) {
+export function useChatMessages(otherUserId) {
     return useQuery({
         queryKey: ["chat-messages", otherUserId],
         queryFn: async () => {
@@ -36,17 +37,9 @@ export function useSendMessage() {
     });
 }
 
-export function useChatNotificationsQuery() {
-    return useQuery({
-        queryKey: ["chat-notifications"],
-        queryFn: async () => {
-            return await http(apiUrl + "/chat/get-notification");
-        },
-        refetchInterval: 3000,
-    });
-}
 
-export function useMarkAsUnread() {
+
+export function useMarkChatAsUnread() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (otherUserId) => {
@@ -101,10 +94,11 @@ export function useEditMessage() {
     });
 }
 
-export function useChatUpdates(otherUserId, currentUserId) {
+export function useChatUpdates(enabled, otherUserId, currentUserId) {
     const queryClient = useQueryClient();
 
     return useQuery({
+        enabled: enabled,
         queryKey: ["chat-updates", otherUserId],
         queryFn: async () => {
             const chatMessagesData = queryClient.getQueryData(["chat-messages", otherUserId]);
@@ -128,6 +122,7 @@ export function useChatUpdates(otherUserId, currentUserId) {
             });
 
             if (response.status === 'success') {
+
                 queryClient.setQueryData(["chat-messages", otherUserId], (oldData) => {
                     if (!oldData) return oldData;
 
@@ -179,7 +174,18 @@ export function useChatUpdates(otherUserId, currentUserId) {
             }
             return response;
         },
-        enabled: !!otherUserId && !!currentUserId,
-        refetchInterval: 3000,
+
+
+    });
+}
+
+export function useSendPushNotification() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (otherUserId) => {
+            return await http(apiUrl + `/chat/send-push-notification/${otherUserId}`, {
+                method: "post"
+            });
+        }
     });
 }

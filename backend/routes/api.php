@@ -33,11 +33,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('users', [ChatController::class, 'index']);
         Route::get('messages/{otherUserId}', [ChatController::class, 'chatWithUser']);
         Route::post("create", [ChatController::class, 'create']);
-        Route::get("get-notification", [ChatController::class, 'getNotification']);
+        Route::post("send-push-notification/{otherUserId}", [ChatController::class, 'sendPushNotification']);
         Route::post("delete-message/{id}", [ChatController::class, 'deletedMessage']);
         Route::post("hide-message/{id}", [ChatController::class, 'hideMessage']);
         Route::post("mark-as-unread/{otherUserId}", [ChatController::class, 'markAsUnread']);
         Route::post("get-chat-updates/{otherUserId}", [ChatController::class, 'getChatUpdates']);
         Route::post("edit-message/{id}", [ChatController::class, 'editMessage']);
     });
+
+    Route::post("save-notification-subscription", [\App\Http\Controllers\Dashboard\UserController::class, 'saveSubscription']);
 });

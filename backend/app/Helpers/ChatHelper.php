@@ -15,4 +15,9 @@ class ChatHelper
 
         return "{$firstId}_{$secondId}";
     }
+    public static function buildUidSql($userId1, $userId2)
+    {
+        // SQL logic to match PHP's buildUid: always smaller_larger
+        return "CONCAT(LEAST($userId1, $userId2), '_', GREATEST($userId1, $userId2))";
+    }
 }

@@ -15,7 +15,7 @@ ReactDOM.createRoot(root).render(<App />);
 // Service Worker Registration
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register(import.meta.env.VITE_ROOT_PATH + 'sw.js?v=2')
             .then(registration => {
                 console.log('SW registered: ', registration);
             })

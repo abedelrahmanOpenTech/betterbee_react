@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Helpers\ChatHelper;
+use App\Helpers\PushNotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Chat;
 use App\Models\LastChat;
@@ -28,7 +29,7 @@ class ChatController extends Controller
         $otherUser = User::findOrFail($otherUserId);
 
         Chat::deleteSoftDeletedMessagesBetweenUsers(user()->id, $otherUser->id);
-        Chat::where('is_edit_reflected', 0)->where('is_edited', 1)->where('created_at', '<', now()->subHours(1))->update(['is_edit_reflected' => 1]);
+        Chat::where('is_edit_reflected', 0)->where('is_edited', 1)->where('updated_at', '<', now()->subHours(1))->update(['is_edit_reflected' => 1]);
         Chat::where('is_delete_reflected', 0)->where('is_deleted', 1)->where('created_at', '<', now()->subHours(1))->update(['is_delete_reflected' => 1]);
 
         $chat = Chat::getMessagesBetweenUsers(user()->id, $otherUser->id);
@@ -43,7 +44,7 @@ class ChatController extends Controller
     public function create()
     {
         if (empty(request()->message) && !request()->hasFile('chat_file')) {
-            return response()->json(["status" => "error", "message" => "message or file required"], 400);
+            return response()->json(["status" => "error", "message" => __('messages.message_or_file_required')], 400);
         }
 
         $chat = DB::transaction(function () {
@@ -74,9 +75,11 @@ class ChatController extends Controller
             return $chat;
         });
 
+        // PushNotificationHelper logic removed
+
         return response()->json([
             "status" => "success",
-            "message" => "Message sent",
+            "message" => __('messages.message_sent'),
             "chat" => $chat
         ]);
     }
@@ -116,9 +119,11 @@ class ChatController extends Controller
     {
         Chat::softDelete($id);
 
+        // PushNotificationHelper logic removed
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Deleted',
+            'message' => __('messages.deleted'),
         ]);
     }
 
@@ -131,7 +136,7 @@ class ChatController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Hidden',
+            'message' => __('messages.hidden'),
         ]);
     }
 
@@ -146,7 +151,7 @@ class ChatController extends Controller
         if (!$message) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'No message found'
+                'message' => __('messages.no_message_found')
             ]);
         }
 
@@ -154,7 +159,7 @@ class ChatController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Completed'
+            'message' => __('messages.completed')
         ]);
     }
 
@@ -167,64 +172,35 @@ class ChatController extends Controller
         $message->update([
             'message' => request()->message,
             'is_edited' => 1,
-            'is_edit_reflected' => 0
+            'is_edit_reflected' => 0,
+            'updated_at' => Carbon::now()
         ]);
 
-        // Update last chat if needed
         LastChat::where('original_chat_id', $id)->update([
             'message' => request()->message,
         ]);
 
+        // PushNotificationHelper logic removed
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Message updated',
+            'message' => __('messages.message_updated'),
             'chat' => $message
         ]);
     }
 
-
-    public function getNotification()
+    public function sendPushNotification($otherUserId)
     {
+        $lastChat = LastChat::where('uid', ChatHelper::buildUid(user()->id, $otherUserId))->first();
 
-        if (user()->is_disabled) {
-            return response()->json([
-                "status" => "error",
-                "message" => "Account disabled",
-                "action" => "logout"
+        if ($lastChat) {
+            PushNotificationHelper::sendNotification($otherUserId, [
+                'message' => user()->name . ": " . ($lastChat->message ?: __('messages.sent_a_file')),
             ]);
         }
 
-
-        User::updateLastSeen();
-
-        $unreadMessages = Chat::getUnreadMessages(user()->id);
-
-        $oldUnreadMessages = session('unreadMessages', []);
-
-        $unreadMessagesCount = $this->getCount($unreadMessages);
-        $oldUnreadMessagesCount = $this->getCount($oldUnreadMessages);
-        $newMessageFound = $unreadMessagesCount > $oldUnreadMessagesCount;
-
-        session()->put('unreadMessages', $unreadMessages);
-
-
         return response()->json([
-            "status" => "success",
-            "unreadMessages" => $unreadMessages,
-            "newMessageFound" => $newMessageFound,
-            "unreadMessagesCount" => $unreadMessagesCount,
-            "onlineUsers" => User::getOnlineUsers()
+            'status' => 'success'
         ]);
-    }
-
-
-
-    private function getCount($unreadMessages)
-    {
-        $total = 0;
-        foreach ($unreadMessages as $message) {
-            $total += count($message->toArray());
-        }
-        return $total;
     }
 }

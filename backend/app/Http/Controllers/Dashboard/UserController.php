@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Constants\UserTypes;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserNotificationSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -83,5 +84,31 @@ class UserController extends Controller
         session()->flash("toast", ["status" => "success", "message" => "Saved"]);
 
         return redirectResponse("dashboard/users");
+    }
+
+    public function saveSubscription(Request $request)
+    {
+        $userId = user()->id;
+        $subscription = $request->input('subscription');
+
+        if (!$userId || !$subscription) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid data'], 400);
+        }
+
+        $subscriptionJson = json_encode($subscription);
+
+        // Check if subscription already exists
+        $exists = UserNotificationSubscription::where('user_id', $userId)
+            ->where('subscription', $subscriptionJson)
+            ->exists();
+
+        if (!$exists) {
+            UserNotificationSubscription::create([
+                'user_id' => $userId,
+                'subscription' => $subscriptionJson
+            ]);
+        }
+
+        return response()->json(['status' => 'success', 'message' => 'Subscription saved']);
     }
 }

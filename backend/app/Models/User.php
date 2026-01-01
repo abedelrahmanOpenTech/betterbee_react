@@ -44,7 +44,7 @@ class User extends Authenticatable
         'last_seen' => 'datetime',
     ];
 
-    protected static $onlineDiffTimeInSeconds = 10;
+    protected static $onlineDiffTimeInSeconds = 15;
 
     public function chats()
     {
@@ -66,16 +66,44 @@ class User extends Authenticatable
 
     public static function getList()
     {
-        $users = User::where('id', '!=', auth()->id())
+        $currentUserId = auth()->id();
+
+        // Update last seen for current user
+        User::where('id', $currentUserId)->update(["last_seen" => now()]);
+
+        // 1. Select all users
+        $users = User::where('id', '!=', $currentUserId)
             ->where('type', '!=', UserTypes::ADMIN)
-            ->get()->map(function ($user) {
-                $lastChat = LastChat::where('uid', ChatHelper::buildUid(auth()->id(), $user->id))->first();
-                $user->last_message = $lastChat->message ?? ($lastChat && $lastChat->file ? 'File' : '');
-                $user->last_message_date = $lastChat->created_at ?? Carbon::create(2000, 1, 1);
-                $user->last_message_from_me = $lastChat && $lastChat->from_user_id == auth()->id();
-                return $user;
-            })
+            ->get();
+
+        // 2. Select all last messages
+        $uids = $users->map(fn($user) => ChatHelper::buildUid($currentUserId, $user->id))->toArray();
+        $lastChats = LastChat::whereIn('uid', $uids)->get()->keyBy('uid');
+
+        // 3. Get unread counts
+        $unreadCounts = Chat::where('to_user_id', $currentUserId)
+            ->where('is_read', 0)
+            ->where('is_deleted', 0)
+            ->selectRaw('from_user_id, count(*) as count')
+            ->groupBy('from_user_id')
+            ->pluck('count', 'from_user_id');
+
+        // 4. Combine them
+        $users = $users->map(function ($user) use ($currentUserId, $lastChats, $unreadCounts) {
+            $uid = ChatHelper::buildUid($currentUserId, $user->id);
+            $lastChat = $lastChats->get($uid);
+
+            $user->last_message = $lastChat->message ?? ($lastChat && $lastChat->file ? 'File' : '');
+            $user->last_message_date = $lastChat->created_at ?? Carbon::create(2000, 1, 1);
+            $user->last_message_from_me = $lastChat && $lastChat->from_user_id == $currentUserId;
+            $user->unread_count = $unreadCounts[$user->id] ?? 0;
+
+            $user->is_online = $user->isOnline() ? 1 : 0;
+
+            return $user;
+        })
             ->sortByDesc('last_message_date')
+            ->sortByDesc('is_online')
             ->values();
 
         return $users;

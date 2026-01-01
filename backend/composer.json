@@ -12,6 +12,7 @@
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "league/commonmark": "^2.7",
+        "minishlink/web-push": "^10.0",
         "yajra/laravel-datatables": "^10.1"
     },
     "autoload": {
