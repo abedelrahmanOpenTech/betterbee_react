@@ -5,6 +5,7 @@ import App from './pages/App.jsx'
 import ReactDOM from "react-dom/client";
 import { initLocalization } from './utils/lang.js';
 import { initTheme } from './utils/theme.js';
+import { saveServiceWorkerRegistration } from './utils/notification.js';
 
 initLocalization();
 initTheme();
@@ -17,7 +18,7 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register(import.meta.env.VITE_ROOT_PATH + 'sw.js?v=2')
             .then(registration => {
-                console.log('SW registered: ', registration);
+                saveServiceWorkerRegistration(registration);
             })
             .catch(registrationError => {
                 console.log('SW registration failed: ', registrationError);

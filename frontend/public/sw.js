@@ -1,7 +1,6 @@
-import { appName } from "../src/config";
 
 const CONFIG = {
-    title: appName,
+    title: 'Whisper',
     icon: "images/icon-192x192.png",
     badge: "images/icon-192x192.png",
     url: "",
@@ -65,3 +64,14 @@ self.addEventListener('notificationclick', function (event) {
         })
     );
 });
+
+// async function updateLastSeen() {
+//     console.log('66');
+//     await http(`${apiUrl}/update-last-seen`);
+//     setTimeout(() => {
+//         updateLastSeen();
+//     }, 1000);
+
+// }
+
+// updateLastSeen();

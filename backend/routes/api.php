@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post("mark-as-unread/{otherUserId}", [ChatController::class, 'markAsUnread']);
         Route::post("get-chat-updates/{otherUserId}", [ChatController::class, 'getChatUpdates']);
         Route::post("edit-message/{id}", [ChatController::class, 'editMessage']);
+        Route::get("update-last-seen", [ChatController::class, 'updateLastSeen']);
     });
 
     Route::post("save-notification-subscription", [\App\Http\Controllers\Dashboard\UserController::class, 'saveSubscription']);

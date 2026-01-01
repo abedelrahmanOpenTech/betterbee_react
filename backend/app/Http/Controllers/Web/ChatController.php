@@ -14,6 +14,14 @@ use Illuminate\Support\Facades\DB;
 class ChatController extends Controller
 {
 
+    public function updateLastSeen()
+    {
+        User::updateLastSeen();
+        return [
+            'status' => 'success'
+        ];
+    }
+
     public function index()
     {
         $users = User::getList();
