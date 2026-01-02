@@ -3,7 +3,7 @@ const CONFIG = {
     title: 'Whisper',
     icon: "images/icon-192x192.png",
     badge: "images/icon-192x192.png",
-    url: "",
+    url: "/new_better_bee/new/frontend/",
     broadcastChannel: 'chat_updates_channel',
     broadcastEvent: 'PUSH_NOTIFICATION_RECEIVED'
 };
