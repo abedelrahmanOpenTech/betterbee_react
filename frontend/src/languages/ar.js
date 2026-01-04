@@ -136,7 +136,25 @@ const ar = {
     you: "أنت",
     edit: "تعديل",
     editing_message: "تعديل الرسالة",
-    edited: "تم التعديل"
+    edited: "تم التعديل",
+    broadcast_message: "رسالة جماعية",
+    select_recipients: "اختر المستلمين",
+    select_all: "اختر الكل",
+    no_users_available: "لا يوجد مستخدمون متاحون",
+    users_selected: "مستخدم محدد",
+    message: "الرسالة",
+    send_broadcast: "إرسال رسالة جماعية",
+    broadcast_sent: "تم إرسال الرسالة الجماعية بنجاح",
+    select_at_least_one_user: "الرجاء اختيار مستخدم واحد على الأقل",
+    message_or_file_required: "الرجاء إدخال رسالة أو إرفاق ملف",
+    sending: "جاري الإرسال...",
+    record_voice: "تسجيل صوتي",
+    recording: "جاري التسجيل",
+    stop_recording: "إيقاف التسجيل",
+    voice_recorded: "تم تسجيل الصوت بنجاح",
+    voice_sent: "تم إرسال الرسالة الصوتية",
+    voice_record: "تسجيل صوتي",
+    download: "تحميل"
 };
 
 export default ar;

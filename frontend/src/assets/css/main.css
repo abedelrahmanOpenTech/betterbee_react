@@ -44,6 +44,18 @@ body {
     opacity: 0.9;
 }
 
+.btn-outline-theme {
+    background-color: transparent !important;
+    border: 2px solid var(--theme-color) !important;
+    color: var(--theme-color) !important;
+}
+
+.btn-outline-theme:hover {
+    background-color: var(--theme-color) !important;
+    border-color: var(--theme-color) !important;
+    color: white !important;
+}
+
 .rounded-theme {
     border-radius: 15px !important;
 }

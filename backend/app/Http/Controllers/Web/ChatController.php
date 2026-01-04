@@ -211,4 +211,81 @@ class ChatController extends Controller
             'status' => 'success'
         ]);
     }
+
+    public function sendBroadcast()
+    {
+        $userIds = json_decode(request()->user_ids, true);
+
+        if (empty($userIds) || !is_array($userIds)) {
+            return response()->json([
+                "status" => "error",
+                "message" => __('messages.no_recipients_selected')
+            ], 400);
+        }
+
+        if (empty(request()->message) && !request()->hasFile('chat_file')) {
+            return response()->json([
+                "status" => "error",
+                "message" => __('messages.message_or_file_required')
+            ], 400);
+        }
+
+        $successCount = 0;
+        $errors = [];
+        $uploadedFilePath = "";
+
+        // Handle file upload once, outside the loop
+        if (request()->hasFile('chat_file')) {
+            $file = request()->file('chat_file');
+            $fileName = $file->getClientOriginalName();
+            $timestamp = time();
+            $dir = "chat_files/broadcast_{$timestamp}";
+            $file->move(uploadPath($dir), $fileName);
+            $uploadedFilePath = "$dir/$fileName";
+        }
+
+        foreach ($userIds as $toUserId) {
+            try {
+                DB::transaction(function () use ($toUserId, $uploadedFilePath, &$successCount) {
+                    $data = [
+                        "to_user_id" => $toUserId,
+                        "from_user_id" => user()->id,
+                        "created_at" => Carbon::now(),
+                        "message" => request()->message,
+                        "reply_to" => 0,
+                        "file" => $uploadedFilePath,
+                        "uid" => ChatHelper::buildUid(user()->id, $toUserId)
+                    ];
+
+                    $chat = Chat::create($data);
+
+                    LastChat::add($chat->id, $data);
+
+                    // Send push notification
+                    PushNotificationHelper::sendNotification($toUserId, [
+                        'message' => user()->name . ": " . ($data['message'] ?: __('messages.sent_a_file')),
+                    ]);
+
+                    $successCount++;
+                });
+            } catch (\Exception $e) {
+                $errors[] = "Failed to send to user ID: $toUserId";
+            }
+        }
+
+        if ($successCount === 0) {
+            return response()->json([
+                "status" => "error",
+                "message" => __('messages.broadcast_failed'),
+                "errors" => $errors
+            ], 500);
+        }
+
+        return response()->json([
+            "status" => "success",
+            "message" => __('messages.broadcast_sent'),
+            "sent_count" => $successCount,
+            "total_count" => count($userIds)
+        ]);
+    }
 }

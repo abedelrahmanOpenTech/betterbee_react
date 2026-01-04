@@ -4,6 +4,7 @@ import { Dropdown } from "react-bootstrap";
 import { df } from "../../utils/lang";
 import useAuth from "../../stores/useAuth";
 import { useChatMessages, useSendMessage, useDeleteMessage, useHideMessage, useEditMessage, useChatUpdates, useSendPushNotification } from "../../hooks/useChatQuery";
+import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 
 import Spinner from "../ui/Spinner";
 import { uploadsUrl } from "../../config";
@@ -26,11 +27,6 @@ export default function ChatArea({ otherUserId, onClose }) {
     const [replyingTo, setReplyingTo] = useState(null);
     const [editingMessage, setEditingMessage] = useState(null);
 
-    const [isRecording, setIsRecording] = useState(false);
-    const [recordingTime, setRecordingTime] = useState(0);
-    const mediaRecorderRef = useRef(null);
-    const audioChunksRef = useRef([]);
-    const timerRef = useRef(null);
 
     const chatContainerRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -46,6 +42,32 @@ export default function ChatArea({ otherUserId, onClose }) {
     const { mutate: hideMessage } = useHideMessage();
     const { mutate: editMessage } = useEditMessage();
     const { mutate: sendPushNotification } = useSendPushNotification();
+
+    const handleAudioStop = (audioFile) => {
+        const formData = new FormData();
+        formData.append('to_user_id', otherUserId);
+        formData.append('chat_file', audioFile);
+
+        sendMessage(formData, {
+            onSuccess: () => {
+                updateChatMessages();
+                toast.success(df('voice_sent'));
+                scrollToBottom();
+                sendPushNotification(otherUserId);
+            },
+            onError: (error) => {
+                toast.error(error.message ? error.message : df('error'));
+            }
+        });
+    };
+
+    const {
+        isRecording,
+        recordingTime,
+        startRecording,
+        stopRecording,
+        cancelRecording
+    } = useAudioRecorder(handleAudioStop);
 
     const otherUser = chatData?.otherUser;
     const messages = chatData?.chat || [];
@@ -268,72 +290,6 @@ export default function ChatArea({ otherUserId, onClose }) {
         });
     };
 
-    const startRecording = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const recorder = new MediaRecorder(stream);
-            mediaRecorderRef.current = recorder;
-            audioChunksRef.current = [];
-
-            recorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    audioChunksRef.current.push(event.data);
-                }
-            };
-
-            recorder.onstop = () => {
-                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-                const audioFile = new File([audioBlob], `voice_record_${Date.now()}.wav`, { type: 'audio/wav' });
-
-                const formData = new FormData();
-                formData.append('to_user_id', otherUserId);
-                formData.append('chat_file', audioFile);
-
-                sendMessage(formData, {
-                    onSuccess: () => {
-                        updateChatMessages();
-                        toast.success(df('voice_sent'));
-                        scrollToBottom();
-                        sendPushNotification(otherUserId);
-                    },
-                    onError: (error) => {
-                        toast.error(error.message ? error.message : df('error'));
-                    }
-                });
-
-                stream.getTracks().forEach(track => track.stop());
-            };
-
-            recorder.start();
-            setIsRecording(true);
-            setRecordingTime(0);
-            timerRef.current = setInterval(() => {
-                setRecordingTime(prev => prev + 1);
-            }, 1000);
-        } catch (err) {
-            toast.error(df('microphone_access_denied'));
-        }
-    };
-
-    const stopRecording = () => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-            mediaRecorderRef.current.stop();
-        }
-        setIsRecording(false);
-        clearInterval(timerRef.current);
-    };
-
-    const cancelRecording = () => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-            mediaRecorderRef.current.onstop = null; // Prevent sending
-            mediaRecorderRef.current.stop();
-            const stream = mediaRecorderRef.current.stream;
-            stream.getTracks().forEach(track => track.stop());
-        }
-        setIsRecording(false);
-        clearInterval(timerRef.current);
-        setRecordingTime(0);
-    };
 
 
 

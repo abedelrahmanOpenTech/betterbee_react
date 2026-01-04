@@ -137,7 +137,25 @@ const en = {
     you: "You",
     edit: "Edit",
     editing_message: "Editing Message",
-    edited: "Edited"
+    edited: "Edited",
+    broadcast_message: "Broadcast Message",
+    select_recipients: "Select Recipients",
+    select_all: "Select All",
+    no_users_available: "No users available",
+    users_selected: "users selected",
+    message: "Message",
+    send_broadcast: "Send Broadcast",
+    broadcast_sent: "Broadcast sent successfully",
+    select_at_least_one_user: "Please select at least one user",
+    message_or_file_required: "Please enter a message or attach a file",
+    sending: "Sending...",
+    record_voice: "Record Voice",
+    recording: "Recording",
+    stop_recording: "Stop Recording",
+    voice_recorded: "Voice recorded successfully",
+    voice_sent: "Voice message sent",
+    voice_record: "Voice Record",
+    download: "Download"
 };
 
 export default en;

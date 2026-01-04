@@ -9,6 +9,7 @@ import { uploadsUrl } from "../config";
 import ChatArea from "../components/chat/ChatArea";
 import ProfileModal from "../components/chat/ProfileModal";
 import SettingsModal from "../components/chat/SettingsModal";
+import BroadcastModal from "../components/chat/BroadcastModal";
 import toast from "react-hot-toast";
 import { initializePushNotifications } from "../utils/notification";
 
@@ -23,6 +24,7 @@ export default function Home() {
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [showProfile, setShowProfile] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    const [showBroadcast, setShowBroadcast] = useState(false);
 
 
     useEffect(() => {
@@ -125,6 +127,9 @@ export default function Home() {
                                 <Dropdown.Item className="py-2" onClick={() => setShowProfile(true)}>
                                     {df('profile')}
                                 </Dropdown.Item>
+                                <Dropdown.Item className="py-2" onClick={() => setShowBroadcast(true)}>
+                                    {df('broadcast_message')}
+                                </Dropdown.Item>
                                 <Dropdown.Item className="py-2" onClick={() => setShowSettings(true)}>
                                     {df('settings')}
                                 </Dropdown.Item>
@@ -218,6 +223,7 @@ export default function Home() {
 
             <ProfileModal show={showProfile} onClose={() => setShowProfile(false)} />
             <SettingsModal show={showSettings} onClose={() => setShowSettings(false)} />
+            <BroadcastModal show={showBroadcast} onClose={() => setShowBroadcast(false)} users={usersData?.users || []} />
         </div>
     );
 }

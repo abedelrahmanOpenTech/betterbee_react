@@ -192,3 +192,20 @@ export function useSendPushNotification() {
         }
     });
 }
+
+export function useSendBroadcast() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data) => {
+            return await http(apiUrl + "/chat/broadcast", {
+                method: "post",
+                body: data,
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ["chat-users"]
+            });
+        }
+    });
+}
