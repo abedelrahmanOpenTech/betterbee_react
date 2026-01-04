@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Modal, Form, Button, ListGroup } from "react-bootstrap";
 import { df } from "../../utils/lang";
 import { basename } from "../../utils/utils";
-import { useProjects, useCreateTask } from "../../hooks/useTaskQuery";
+import { useProjects } from "../../hooks/useProjectQuery";
+import { useCreateTask } from "../../hooks/useTaskQuery";
 import Spinner from "../ui/Spinner";
 import toast from "react-hot-toast";
 
@@ -34,9 +35,9 @@ export default function AddToProjectModal({ show, onClose, message }) {
     const projects = projectsData?.projects || [];
 
     return (
-        <Modal show={show} onHide={onClose} centered size="sm">
-            <Modal.Header closeButton className="border-0 bg-theme text-white">
-                <Modal.Title className="h6 fw-bold">{df('add_to_project')}</Modal.Title>
+        <Modal show={show} onHide={onClose} centered contentClassName="rounded-theme border-0 shadow">
+            <Modal.Header closeButton className="bg-theme text-white border-0">
+                <Modal.Title className="fw-bold">{df('add_to_project')}</Modal.Title>
             </Modal.Header>
             <Modal.Body className="p-0">
                 <div className="p-3 bg-light border-bottom">
@@ -67,12 +68,12 @@ export default function AddToProjectModal({ show, onClose, message }) {
                 </div>
             </Modal.Body>
             <Modal.Footer className="border-0">
-                <Button variant="light" onClick={onClose} className="rounded-pill px-3">{df('cancel')}</Button>
+                <Button variant="light" onClick={onClose} className="rounded-theme px-4">{df('cancel')}</Button>
                 <Button
                     variant="theme"
                     onClick={handleAdd}
                     disabled={!selectedProjectId || isPending}
-                    className="rounded-pill px-4"
+                    className="rounded-theme px-4 btn-theme"
                 >
                     {isPending ? <Spinner size="sm" /> : df('add')}
                 </Button>

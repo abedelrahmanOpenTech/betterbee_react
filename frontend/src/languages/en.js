@@ -177,7 +177,11 @@ const en = {
     task_updated: "Task updated successfully",
     task_deleted: "Task deleted successfully",
     copy_done_tasks: "Copy Done Tasks",
-    no_done_tasks: "No done tasks to copy"
+    no_done_tasks: "No done tasks to copy",
+    attachment: "Attachment",
+    attach_files: "Attach Files",
+    edit_task: "Edit Task",
+    view_task: "View Task"
 };
 
 export default en;

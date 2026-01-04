@@ -137,9 +137,9 @@ export default function BroadcastModal({ show, onClose, users, initialMessage = 
     };
 
     return (
-        <Modal show={show} onHide={handleClose} size="lg" centered>
+        <Modal show={show} onHide={handleClose} size="lg" centered contentClassName="rounded-theme border-0 shadow">
             <Modal.Header closeButton className="bg-theme text-white border-0">
-                <Modal.Title>{title || df('broadcast_message')}</Modal.Title>
+                <Modal.Title className="fw-bold">{title || df('broadcast_message')}</Modal.Title>
             </Modal.Header>
             <Modal.Body className="p-0">
                 <div className="p-3">
@@ -286,7 +286,7 @@ export default function BroadcastModal({ show, onClose, users, initialMessage = 
                                     />
                                     <button
                                         type="button"
-                                        className="btn btn-outline-theme rounded-pill"
+                                        className="btn btn-outline-theme rounded-theme px-3"
                                         onClick={() => fileInputRef.current?.click()}
                                         disabled={isSending || selectedFile}
                                     >
@@ -297,7 +297,7 @@ export default function BroadcastModal({ show, onClose, users, initialMessage = 
                                     </button>
                                     <button
                                         type="button"
-                                        className="btn btn-outline-theme rounded-pill"
+                                        className="btn btn-outline-theme rounded-theme px-3"
                                         onClick={startRecording}
                                         disabled={isSending || selectedFile || existingFile}
                                     >
@@ -316,7 +316,7 @@ export default function BroadcastModal({ show, onClose, users, initialMessage = 
                             {isRecording ? (
                                 <button
                                     type="button"
-                                    className="btn btn-danger rounded-pill"
+                                    className="btn btn-danger rounded-theme"
                                     onClick={stopRecording}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-1">
@@ -328,7 +328,7 @@ export default function BroadcastModal({ show, onClose, users, initialMessage = 
                                 <>
                                     <button
                                         type="button"
-                                        className="btn btn-light rounded-pill"
+                                        className="btn btn-light rounded-theme px-4"
                                         onClick={handleClose}
                                         disabled={isSending}
                                     >
@@ -336,7 +336,7 @@ export default function BroadcastModal({ show, onClose, users, initialMessage = 
                                     </button>
                                     <button
                                         type="submit"
-                                        className="btn btn-theme rounded-pill"
+                                        className="btn btn-theme rounded-theme px-4 btn-theme"
                                         disabled={isSending || selectedUsers.length === 0 || (!message.trim() && !selectedFile && !existingFile)}
                                     >
                                         {isSending ? (

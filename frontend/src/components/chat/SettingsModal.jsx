@@ -34,7 +34,7 @@ export default function SettingsModal({ show, onClose }) {
 
     return (
         <Modal show={show} onHide={onClose} centered contentClassName="rounded-theme border-0 shadow">
-            <Modal.Header closeButton className="border-0">
+            <Modal.Header closeButton className="bg-theme text-white border-0">
                 <Modal.Title className="fw-bold">{df('settings')}</Modal.Title>
             </Modal.Header>
             <Modal.Body>

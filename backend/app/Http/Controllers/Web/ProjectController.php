@@ -11,7 +11,9 @@ class ProjectController extends Controller
     public function index()
     {
         $projects = Project::where('user_id', user()->id)
-            ->with(['tasks'])
+            ->with(['tasks' => function ($query) {
+                $query->orderBy('position', 'asc');
+            }, 'tasks.files'])
             ->orderBy('id', 'desc')
             ->get();
 
@@ -43,6 +45,17 @@ class ProjectController extends Controller
     public function destroy($id)
     {
         $project = Project::where('user_id', user()->id)->findOrFail($id);
+
+        foreach ($project->tasks as $task) {
+            foreach ($task->files as $fileRecord) {
+                $filePath = uploadPath() . '/' . $fileRecord->file;
+                if (file_exists($filePath)) {
+                    @unlink($filePath);
+                }
+            }
+            $task->files()->delete();
+        }
+
         $project->tasks()->delete();
         $project->delete();
 

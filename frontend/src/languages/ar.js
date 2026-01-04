@@ -176,7 +176,11 @@ const ar = {
     task_updated: "تم تحديث المهمة بنجاح",
     task_deleted: "تم حذف المهمة بنجاح",
     copy_done_tasks: "نسخ المهام المكتملة",
-    no_done_tasks: "لا توجد مهام مكتملة لنسخها"
+    no_done_tasks: "لا توجد مهام مكتملة لنسخها",
+    attachment: "المرفقات",
+    attach_files: "إرفاق ملفات",
+    edit_task: "تعديل المهمة",
+    view_task: "عرض المهمة"
 };
 
 export default ar;

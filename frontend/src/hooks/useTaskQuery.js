@@ -1,44 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiUrl } from "../config";
 import { http } from "../utils/http";
-
-export function useProjects() {
-    return useQuery({
-        queryKey: ["projects"],
-        queryFn: async () => {
-            return await http(apiUrl + "/projects");
-        },
-    });
-}
-
-export function useCreateProject() {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async (data) => {
-            return await http(apiUrl + "/projects", {
-                method: "post",
-                body: JSON.stringify(data),
-            });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["projects"] });
-        },
-    });
-}
-
-export function useDeleteProject() {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async (id) => {
-            return await http(apiUrl + `/projects/delete/${id}`, {
-                method: "post",
-            });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["projects"] });
-        },
-    });
-}
 
 export function useCreateTask() {
     const queryClient = useQueryClient();
@@ -46,7 +8,22 @@ export function useCreateTask() {
         mutationFn: async (data) => {
             return await http(apiUrl + "/tasks", {
                 method: "post",
-                body: JSON.stringify(data),
+                body: data instanceof FormData ? data : JSON.stringify(data),
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["projects"] });
+        },
+    });
+}
+
+export function useUpdateTask() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ taskId, data }) => {
+            return await http(apiUrl + `/tasks/update/${taskId}`, {
+                method: "post",
+                body: data instanceof FormData ? data : JSON.stringify(data),
             });
         },
         onSuccess: () => {
@@ -76,6 +53,21 @@ export function useDeleteTask() {
         mutationFn: async (taskId) => {
             return await http(apiUrl + `/tasks/delete/${taskId}`, {
                 method: "post",
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["projects"] });
+        },
+    });
+}
+
+export function useReorderTasks() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (data) => {
+            return await http(apiUrl + "/tasks/reorder", {
+                method: "post",
+                body: JSON.stringify(data),
             });
         },
         onSuccess: () => {

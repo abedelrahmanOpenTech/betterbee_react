@@ -9,7 +9,12 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['project_id', 'title', 'status', 'message_id'];
+    protected $fillable = ['project_id', 'title', 'status', 'position', 'message_id'];
+
+    public function files()
+    {
+        return $this->hasMany(TaskFile::class);
+    }
 
     public function project()
     {
