@@ -156,7 +156,28 @@ const en = {
     voice_recorded: "Voice recorded successfully",
     voice_sent: "Voice message sent",
     voice_record: "Voice Record",
-    download: "Download"
+    download: "Download",
+    task_management: "Task Management",
+    new_project: "New Project",
+    add_task: "Add Task",
+    task_title: "Task Title",
+    pending: "Pending",
+    working: "Working",
+    done: "Done",
+    select_or_create_project: "Select or create a project to start managing tasks",
+    add_to_project: "Add to Project",
+    message_preview: "Message Preview",
+    no_projects_found: "No projects found",
+    add_as_task: "Add as Task",
+    move_back: "Move Back",
+    move_forward: "Move Forward",
+    project_created: "Project created successfully",
+    project_deleted: "Project deleted successfully",
+    task_created: "Task created successfully",
+    task_updated: "Task updated successfully",
+    task_deleted: "Task deleted successfully",
+    copy_done_tasks: "Copy Done Tasks",
+    no_done_tasks: "No done tasks to copy"
 };
 
 export default en;

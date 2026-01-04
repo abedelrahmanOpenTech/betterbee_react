@@ -13,6 +13,7 @@ import { Fancybox } from "@fancyapps/ui";
 import EmojiPicker from 'emoji-picker-react';
 import { basename, formatTime, isImage, isAudio, isLink, ensureProtocol } from "../../utils/utils";
 import { MySwal, MessageOptionsToggle, FileIcon } from "../../utils/chatUtils";
+import AddToProjectModal from "./AddToProjectModal";
 
 export default function ChatArea({ otherUserId, onClose, onForward }) {
     const auth = useAuth();
@@ -26,6 +27,8 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
     const [currentResultIndex, setCurrentResultIndex] = useState(0);
     const [replyingTo, setReplyingTo] = useState(null);
     const [editingMessage, setEditingMessage] = useState(null);
+    const [showAddToProject, setShowAddToProject] = useState(false);
+    const [selectedMessageForTask, setSelectedMessageForTask] = useState(null);
 
 
     const chatContainerRef = useRef(null);
@@ -601,6 +604,16 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
                                                         </div>
                                                     </Dropdown.Item>
 
+                                                    <Dropdown.Item onClick={() => {
+                                                        setSelectedMessageForTask(message);
+                                                        setShowAddToProject(true);
+                                                    }} className="py-2 rounded">
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
+                                                            {df('add_as_task')}
+                                                        </div>
+                                                    </Dropdown.Item>
+
                                                     {isMine && message.message && (
                                                         <Dropdown.Item onClick={() => handleEdit(message)} className="py-2 rounded">
                                                             <div className="d-flex align-items-center gap-2">
@@ -795,6 +808,15 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
                     </button>
                 )}
             </form>
+
+            <AddToProjectModal
+                show={showAddToProject}
+                onClose={() => {
+                    setShowAddToProject(false);
+                    setSelectedMessageForTask(null);
+                }}
+                message={selectedMessageForTask}
+            />
         </div>
     );
 }

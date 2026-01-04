@@ -10,6 +10,7 @@ import ChatArea from "../components/chat/ChatArea";
 import ProfileModal from "../components/chat/ProfileModal";
 import SettingsModal from "../components/chat/SettingsModal";
 import BroadcastModal from "../components/chat/BroadcastModal";
+import TaskManagementModal from "../components/chat/TaskManagementModal";
 import toast from "react-hot-toast";
 import { initializePushNotifications } from "../utils/notification";
 
@@ -26,6 +27,7 @@ export default function Home() {
     const [showSettings, setShowSettings] = useState(false);
     const [showBroadcast, setShowBroadcast] = useState(false);
     const [showForward, setShowForward] = useState(false);
+    const [showTasks, setShowTasks] = useState(false);
     const [forwardData, setForwardData] = useState(null);
 
 
@@ -131,6 +133,9 @@ export default function Home() {
                                 <Dropdown.Item className="py-2" onClick={() => setShowBroadcast(true)}>
                                     {df('broadcast_message')}
                                 </Dropdown.Item>
+                                <Dropdown.Item className="py-2" onClick={() => setShowTasks(true)}>
+                                    {df('task_management')}
+                                </Dropdown.Item>
                                 <Dropdown.Item className="py-2" onClick={() => setShowSettings(true)}>
                                     {df('settings')}
                                 </Dropdown.Item>
@@ -230,6 +235,7 @@ export default function Home() {
             </div>
 
             <ProfileModal show={showProfile} onClose={() => setShowProfile(false)} />
+            <TaskManagementModal show={showTasks} onClose={() => setShowTasks(false)} />
             <SettingsModal show={showSettings} onClose={() => setShowSettings(false)} />
             <BroadcastModal show={showBroadcast} onClose={() => setShowBroadcast(false)} users={usersData?.users || []} />
             <BroadcastModal

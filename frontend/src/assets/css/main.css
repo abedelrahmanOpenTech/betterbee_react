@@ -141,6 +141,48 @@ body {
     border-top-left-radius: 0;
 }
 
+.task-modal .modal-content {
+    border-radius: 1.5rem;
+    overflow: hidden;
+}
+
+.kanban-column {
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+.task-list {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.task-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+}
+
+.task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.hover-bg-light:hover {
+    background-color: #f8f9fa;
+}
+
+.transition-all {
+    transition: all 0.2s ease;
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1px;
+}
+
+.rounded-4 {
+    border-radius: 1rem !important;
+}
+
 
 .chat-bubble.theirs {
     background-color: #ffffff;

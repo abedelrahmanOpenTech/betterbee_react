@@ -155,7 +155,28 @@ const ar = {
     voice_recorded: "تم تسجيل الصوت بنجاح",
     voice_sent: "تم إرسال الرسالة الصوتية",
     voice_record: "تسجيل صوتي",
-    download: "تحميل"
+    download: "تحميل",
+    task_management: "إدارة المهام",
+    new_project: "مشروع جديد",
+    add_task: "إضافة مهمة",
+    task_title: "عنوان المهمة",
+    pending: "قيد الانتظار",
+    working: "قيد التنفيذ",
+    done: "مكتمل",
+    select_or_create_project: "اختر أو أنشئ مشروعاً للبدء في إدارة المهام",
+    add_to_project: "إضافة إلى المشروع",
+    message_preview: "معاينة الرسالة",
+    no_projects_found: "لم يتم العثور على مشاريع",
+    add_as_task: "إضافة كمهمة",
+    move_back: "نقل للخلف",
+    move_forward: "نقل للأمام",
+    project_created: "تم إنشاء المشروع بنجاح",
+    project_deleted: "تم حذف المشروع بنجاح",
+    task_created: "تم إنشاء المهمة بنجاح",
+    task_updated: "تم تحديث المهمة بنجاح",
+    task_deleted: "تم حذف المهمة بنجاح",
+    copy_done_tasks: "نسخ المهام المكتملة",
+    no_done_tasks: "لا توجد مهام مكتملة لنسخها"
 };
 
 export default ar;

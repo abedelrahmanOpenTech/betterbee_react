@@ -43,5 +43,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get("update-last-seen", [ChatController::class, 'updateLastSeen']);
     });
 
+    Route::prefix('projects')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Web\ProjectController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Web\ProjectController::class, 'store']);
+        Route::post('/delete/{id}', [\App\Http\Controllers\Web\ProjectController::class, 'destroy']);
+    });
+
+    Route::prefix('tasks')->group(function () {
+        Route::post('/', [\App\Http\Controllers\Web\TaskController::class, 'store']);
+        Route::post('/{id}/status', [\App\Http\Controllers\Web\TaskController::class, 'updateStatus']);
+        Route::post('/update/{id}', [\App\Http\Controllers\Web\TaskController::class, 'update']);
+        Route::post('/delete/{id}', [\App\Http\Controllers\Web\TaskController::class, 'destroy']);
+    });
+
     Route::post("save-notification-subscription", [\App\Http\Controllers\Dashboard\UserController::class, 'saveSubscription']);
 });
