@@ -122,6 +122,9 @@ export function useChatUpdates(enabled, otherUserId, currentUserId) {
             });
 
             if (response.status === 'success') {
+                queryClient.invalidateQueries({
+                    queryKey: ["chat-users"]
+                });
 
                 queryClient.setQueryData(["chat-messages", otherUserId], (oldData) => {
                     if (!oldData) return oldData;
