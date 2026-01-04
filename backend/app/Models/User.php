@@ -74,6 +74,7 @@ class User extends Authenticatable
         // 1. Select all users
         $users = User::where('id', '!=', $currentUserId)
             ->where('type', '!=', UserTypes::ADMIN)
+            ->where('is_disabled', 0)
             ->get();
 
         // 2. Select all last messages
