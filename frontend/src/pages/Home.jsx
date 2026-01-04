@@ -25,6 +25,8 @@ export default function Home() {
     const [showProfile, setShowProfile] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showBroadcast, setShowBroadcast] = useState(false);
+    const [showForward, setShowForward] = useState(false);
+    const [forwardData, setForwardData] = useState(null);
 
 
     useEffect(() => {
@@ -41,7 +43,6 @@ export default function Home() {
     const filteredUsers = (usersData?.users || [])
         .filter(user => user.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    // Calculate total unread for audio trigger (optional, basic implementation)
     const totalUnread = (usersData?.users || []).reduce((acc, user) => acc + (parseInt(user.unread_count) || 0), 0);
     const prevTotalUnreadRef = useRef(0);
 
@@ -206,7 +207,14 @@ export default function Home() {
 
                 <div className={`col-12 col-md-9 px-0 position-relative d-flex flex-column h-100 bg-grey ${!selectedUserId ? 'd-none d-md-flex align-items-center justify-content-center border-0' : 'd-flex'}`}>
                     {selectedUserId ? (
-                        <ChatArea otherUserId={selectedUserId} onClose={() => setSelectedUserId(null)} />
+                        <ChatArea
+                            otherUserId={selectedUserId}
+                            onClose={() => setSelectedUserId(null)}
+                            onForward={(data) => {
+                                setForwardData(data);
+                                setShowForward(true);
+                            }}
+                        />
                     ) : (
                         <div className="text-center p-5 animate-fade-in my-auto mx-auto align-items-center justify-content-center d-flex flex-column">
                             <div className="mb-4 text-theme opacity-50">
@@ -224,6 +232,17 @@ export default function Home() {
             <ProfileModal show={showProfile} onClose={() => setShowProfile(false)} />
             <SettingsModal show={showSettings} onClose={() => setShowSettings(false)} />
             <BroadcastModal show={showBroadcast} onClose={() => setShowBroadcast(false)} users={usersData?.users || []} />
+            <BroadcastModal
+                show={showForward}
+                onClose={() => {
+                    setShowForward(false);
+                    setForwardData(null);
+                }}
+                users={usersData?.users || []}
+                initialMessage={forwardData?.message}
+                forwardFile={forwardData?.file}
+                title={df('forward')}
+            />
         </div>
     );
 }

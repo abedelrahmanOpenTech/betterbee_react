@@ -14,7 +14,7 @@ import EmojiPicker from 'emoji-picker-react';
 import { basename, formatTime, isImage, isAudio, isLink, ensureProtocol } from "../../utils/utils";
 import { MySwal, MessageOptionsToggle, FileIcon } from "../../utils/chatUtils";
 
-export default function ChatArea({ otherUserId, onClose }) {
+export default function ChatArea({ otherUserId, onClose, onForward }) {
     const auth = useAuth();
     const [message, setMessage] = useState("");
     const [isUploading, setIsUploading] = useState(false);
@@ -591,6 +591,13 @@ export default function ChatArea({ otherUserId, onClose }) {
                                                         <div className="d-flex align-items-center gap-2">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M10 9V5l-7 7l7 7v-4.1c5 0 8.5 1.6 11 5.1c-1-5-4-10-11-11" /></svg>
                                                             {df('reply')}
+                                                        </div>
+                                                    </Dropdown.Item>
+
+                                                    <Dropdown.Item onClick={() => onForward(message)} className="py-2 rounded">
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2L4.5 9.5H9V17H15V9.5H19.5L12 2Z" /></svg>
+                                                            {df('forward')}
                                                         </div>
                                                     </Dropdown.Item>
 

@@ -8,10 +8,11 @@ import { useSendBroadcast } from "../../hooks/useChatQuery";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { formatTime } from "../../utils/utils";
 
-export default function BroadcastModal({ show, onClose, users }) {
+export default function BroadcastModal({ show, onClose, users, initialMessage = "", forwardFile = null, title = null }) {
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [message, setMessage] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);
+    const [existingFile, setExistingFile] = useState(null);
     const [selectAll, setSelectAll] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const fileInputRef = useRef(null);
@@ -32,14 +33,22 @@ export default function BroadcastModal({ show, onClose, users }) {
         cancelRecording
     } = useAudioRecorder(handleAudioStop);
 
-    // Select all users by default when modal opens
     useEffect(() => {
-        if (show && users.length > 0) {
-            setSelectedUsers(users.map(user => user.id));
-            setSelectAll(true);
-            setSearchTerm(""); // Reset search when opening
+        if (show) {
+            const isForward = !!(initialMessage || forwardFile);
+            if (users.length > 0 && !isForward) {
+                setSelectedUsers(users.map(user => user.id));
+                setSelectAll(true);
+            } else {
+                setSelectedUsers([]);
+                setSelectAll(false);
+            }
+            setSearchTerm("");
+            setMessage(initialMessage || "");
+            setExistingFile(forwardFile);
+            setSelectedFile(null);
         }
-    }, [show, users]);
+    }, [show, users, initialMessage, forwardFile]);
 
     const filteredUsers = users.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -79,7 +88,7 @@ export default function BroadcastModal({ show, onClose, users }) {
             return;
         }
 
-        if (!message.trim() && !selectedFile) {
+        if (!message.trim() && !selectedFile && !existingFile) {
             toast.error(df('message_or_file_required'));
             return;
         }
@@ -91,6 +100,8 @@ export default function BroadcastModal({ show, onClose, users }) {
         }
         if (selectedFile) {
             formData.append('chat_file', selectedFile);
+        } else if (existingFile) {
+            formData.append('forward_file', existingFile);
         }
 
         sendBroadcast(formData, {
@@ -108,6 +119,7 @@ export default function BroadcastModal({ show, onClose, users }) {
         setSelectedUsers([]);
         setMessage("");
         setSelectedFile(null);
+        setExistingFile(null);
         setSelectAll(true);
         setSearchTerm("");
         if (isRecording) {
@@ -118,6 +130,7 @@ export default function BroadcastModal({ show, onClose, users }) {
 
     const removeFile = () => {
         setSelectedFile(null);
+        setExistingFile(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -126,7 +139,7 @@ export default function BroadcastModal({ show, onClose, users }) {
     return (
         <Modal show={show} onHide={handleClose} size="lg" centered>
             <Modal.Header closeButton className="bg-theme text-white border-0">
-                <Modal.Title>{df('broadcast_message')}</Modal.Title>
+                <Modal.Title>{title || df('broadcast_message')}</Modal.Title>
             </Modal.Header>
             <Modal.Body className="p-0">
                 <div className="p-3">
@@ -242,17 +255,19 @@ export default function BroadcastModal({ show, onClose, users }) {
                                     />
                                 </div>
 
-                                {selectedFile && (
+                                {(selectedFile || existingFile) && (
                                     <div className="mb-3 p-3 bg-light rounded d-flex align-items-center justify-content-between">
-                                        <div className="d-flex align-items-center gap-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <div className="d-flex align-items-center gap-2 overflow-hidden">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                                                 <path d="M13.324 8.436L9.495 12.19c-.364.36-.564.852-.556 1.369a2 2 0 0 0 .6 1.387c.375.371.88.584 1.403.593a1.92 1.92 0 0 0 1.386-.55l3.828-3.754a3.75 3.75 0 0 0 1.112-2.738a4 4 0 0 0-1.198-2.775a4.1 4.1 0 0 0-2.808-1.185a3.85 3.85 0 0 0-2.77 1.098L6.661 9.39a5.63 5.63 0 0 0-1.667 4.107a6 6 0 0 0 1.798 4.161a6.15 6.15 0 0 0 4.21 1.778a5.77 5.77 0 0 0 4.157-1.646l3.829-3.756" />
                                             </svg>
-                                            <span className="small">{selectedFile.name}</span>
+                                            <span className="small text-truncate pulse-animation-hover">
+                                                {selectedFile ? selectedFile.name : (existingFile.split('/').pop())}
+                                            </span>
                                         </div>
                                         <button
                                             type="button"
-                                            className="btn btn-sm btn-link text-danger p-0"
+                                            className="btn btn-sm btn-link text-danger p-0 ms-2 flex-shrink-0"
                                             onClick={removeFile}
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
@@ -284,7 +299,7 @@ export default function BroadcastModal({ show, onClose, users }) {
                                         type="button"
                                         className="btn btn-outline-theme rounded-pill"
                                         onClick={startRecording}
-                                        disabled={isSending || selectedFile}
+                                        disabled={isSending || selectedFile || existingFile}
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-1">
                                             <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
@@ -322,7 +337,7 @@ export default function BroadcastModal({ show, onClose, users }) {
                                     <button
                                         type="submit"
                                         className="btn btn-theme rounded-pill"
-                                        disabled={isSending || selectedUsers.length === 0 || (!message.trim() && !selectedFile)}
+                                        disabled={isSending || selectedUsers.length === 0 || (!message.trim() && !selectedFile && !existingFile)}
                                     >
                                         {isSending ? (
                                             <>

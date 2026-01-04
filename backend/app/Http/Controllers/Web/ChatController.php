@@ -223,7 +223,7 @@ class ChatController extends Controller
             ], 400);
         }
 
-        if (empty(request()->message) && !request()->hasFile('chat_file')) {
+        if (empty(request()->message) && !request()->hasFile('chat_file') && empty(request()->forward_file)) {
             return response()->json([
                 "status" => "error",
                 "message" => __('messages.message_or_file_required')
@@ -232,9 +232,9 @@ class ChatController extends Controller
 
         $successCount = 0;
         $errors = [];
-        $uploadedFilePath = "";
+        $uploadedFilePath = request()->forward_file ?? "";
 
-        // Handle file upload once, outside the loop
+
         if (request()->hasFile('chat_file')) {
             $file = request()->file('chat_file');
             $fileName = $file->getClientOriginalName();
@@ -261,7 +261,6 @@ class ChatController extends Controller
 
                     LastChat::add($chat->id, $data);
 
-                    // Send push notification
                     PushNotificationHelper::sendNotification($toUserId, [
                         'message' => user()->name . ": " . ($data['message'] ?: __('messages.sent_a_file')),
                     ]);
