@@ -1,4 +1,3 @@
-import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import "@fancyapps/ui/dist/fancybox/fancybox.css";
 import './assets/css/main.css'
 import App from './pages/App.jsx'

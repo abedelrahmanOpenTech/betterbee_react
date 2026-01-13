@@ -52,6 +52,7 @@ export default function Login() {
                     <div className="mb-4">
                         <h1 className="fw-bold mb-2 display-6 text-theme2">{df('login')}</h1>
                         <p className="text-secondary m-0">{df('login_subtitle')}</p>
+
                     </div>
 
                     <form onSubmit={handleSubmit(onSubmit)}>

@@ -13,14 +13,11 @@ import BroadcastModal from "../components/chat/BroadcastModal";
 import TaskManagementModal from "../components/chat/TaskManagementModal";
 import toast from "react-hot-toast";
 import { initializePushNotifications } from "../utils/notification";
-
 import { CustomToggle, ThreeDotsToggle } from "../utils/chatUtils";
 
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function Home() {
     const auth = useAuth();
-    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [showProfile, setShowProfile] = useState(false);
@@ -29,12 +26,6 @@ export default function Home() {
     const [showForward, setShowForward] = useState(false);
     const [showTasks, setShowTasks] = useState(false);
     const [forwardData, setForwardData] = useState(null);
-
-
-    useEffect(() => {
-        initializePushNotifications();
-    }, []);
-
 
     const { data: usersData, isLoading: isUsersLoading, refetch: fetchChatUsers } = useChatUsers();
 
@@ -47,6 +38,39 @@ export default function Home() {
 
     const totalUnread = (usersData?.users || []).reduce((acc, user) => acc + (parseInt(user.unread_count) || 0), 0);
     const prevTotalUnreadRef = useRef(0);
+
+    const handleMarkAsUnread = (userId) => {
+        markAsUnread(userId, {
+            onSuccess: () => {
+                toast.success(df('success'));
+                fetchChatUsers();
+                if (selectedUserId === userId) {
+                    setSelectedUserId(null);
+                }
+
+            },
+            onError: () => {
+                toast.error(df('error'));
+            }
+        });
+    };
+
+
+    useEffect(() => {
+        initializePushNotifications();
+
+        const channel = new BroadcastChannel('chat_updates_channel');
+        channel.onmessage = (event) => {
+            if (event.data.type === 'PUSH_NOTIFICATION_RECEIVED') {
+                fetchChatUsers();
+            }
+        };
+
+        return () => {
+            channel.close();
+        };
+    }, []);
+
 
     useEffect(() => {
         if (totalUnread > prevTotalUnreadRef.current) {
@@ -62,37 +86,6 @@ export default function Home() {
         }
 
     }, [totalUnread]);
-
-    const handleMarkAsUnread = (userId) => {
-        markAsUnread(userId, {
-            onSuccess: () => {
-                toast.success(df('success'));
-                if (selectedUserId === userId) {
-                    setSelectedUserId(null);
-                }
-            },
-            onError: () => {
-                toast.error(df('error'));
-            }
-        });
-    };
-
-
-    useEffect(() => {
-        const channel = new BroadcastChannel('chat_updates_channel');
-        channel.onmessage = (event) => {
-            if (event.data.type === 'PUSH_NOTIFICATION_RECEIVED') {
-                fetchChatUsers();
-            }
-        };
-
-        return () => {
-
-            channel.close();
-        };
-    }, []);
-
-
 
     if (isUsersLoading) {
         return (
@@ -142,7 +135,10 @@ export default function Home() {
                                 <Dropdown.Item className="py-2" onClick={() => window.location.reload()}>
                                     {df('reload')}
                                 </Dropdown.Item>
-                                <Dropdown.Item className="py-2 text-danger" onClick={() => auth.clear()}>
+                                <Dropdown.Item className="py-2 text-danger" onClick={async () => {
+                                    await auth.clear()
+                                    window.location.reload()
+                                }}>
                                     {df('logout')}
                                 </Dropdown.Item>
                             </Dropdown.Menu>
@@ -185,7 +181,7 @@ export default function Home() {
                                             <div className="fw-bold text-dark">
                                                 {user.name}
                                             </div>
-                                            <div className="small text-secondary text-truncate">
+                                            <div className="small text-secondary text-truncate" style={{ maxWidth: "150px" }}>
                                                 {user.last_message_from_me ? df('you') + ': ' : ''}{user.last_message}
                                             </div>
                                         </div>
@@ -237,7 +233,8 @@ export default function Home() {
             <ProfileModal show={showProfile} onClose={() => setShowProfile(false)} />
             <TaskManagementModal show={showTasks} onClose={() => setShowTasks(false)} />
             <SettingsModal show={showSettings} onClose={() => setShowSettings(false)} />
-            <BroadcastModal show={showBroadcast} onClose={() => setShowBroadcast(false)} users={usersData?.users || []} />
+            <BroadcastModal
+                show={showBroadcast} onClose={() => setShowBroadcast(false)} users={usersData?.users || []} />
             <BroadcastModal
                 show={showForward}
                 onClose={() => {

@@ -2,13 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { Modal } from "react-bootstrap";
 import { df } from "../../utils/lang";
 import { uploadsUrl } from "../../config";
-import Spinner from "../ui/Spinner";
 import toast from "react-hot-toast";
 import { useSendBroadcast } from "../../hooks/useChatQuery";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { formatTime } from "../../utils/utils";
 
-export default function BroadcastModal({ show, onClose, users, initialMessage = "", forwardFile = null, title = null }) {
+const BroadcastModal = ({ show, onClose, users, initialMessage = "", forwardFile = null, title = null }) => {
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [message, setMessage] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);
@@ -36,6 +35,7 @@ export default function BroadcastModal({ show, onClose, users, initialMessage = 
     useEffect(() => {
         if (show) {
             const isForward = !!(initialMessage || forwardFile);
+
             if (users.length > 0 && !isForward) {
                 setSelectedUsers(users.map(user => user.id));
                 setSelectAll(true);
@@ -48,7 +48,8 @@ export default function BroadcastModal({ show, onClose, users, initialMessage = 
             setExistingFile(forwardFile);
             setSelectedFile(null);
         }
-    }, [show, users, initialMessage, forwardFile]);
+
+    }, [show, initialMessage, forwardFile]);
 
     const filteredUsers = users.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -184,7 +185,7 @@ export default function BroadcastModal({ show, onClose, users, initialMessage = 
                             />
                         </div>
                     </div>
-                    <div className="bg-white overflow-auto mb-3" style={{ maxHeight: '400px' }}>
+                    <div className="bg-white overflow-auto mb-3" style={{ maxHeight: '300px' }}>
                         {filteredUsers.length === 0 ? (
                             <div className="p-4 text-center text-secondary">
                                 {searchTerm ? df('no_results') : df('no_users_available')}
@@ -362,3 +363,4 @@ export default function BroadcastModal({ show, onClose, users, initialMessage = 
         </Modal>
     );
 }
+export default BroadcastModal;

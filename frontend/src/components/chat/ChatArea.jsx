@@ -14,8 +14,10 @@ import EmojiPicker from 'emoji-picker-react';
 import { basename, formatTime, isImage, isAudio, isLink, ensureProtocol } from "../../utils/utils";
 import { MySwal, MessageOptionsToggle, FileIcon } from "../../utils/chatUtils";
 import AddToProjectModal from "./AddToProjectModal";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function ChatArea({ otherUserId, onClose, onForward }) {
+    const queryClient = useQueryClient();
     const auth = useAuth();
     const [message, setMessage] = useState("");
     const [isUploading, setIsUploading] = useState(false);
@@ -36,6 +38,7 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
     const textareaRef = useRef(null);
     const searchInputRef = useRef(null);
     const emojiPickerRef = useRef(null);
+    const firstOpen = useRef(true);
 
     const { data: chatData, isLoading } = useChatMessages(otherUserId);
     const { refetch: updateChatMessages } = useChatUpdates(false, otherUserId, auth?.user?.id);
@@ -53,9 +56,11 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
 
         sendMessage(formData, {
             onSuccess: () => {
-                updateChatMessages();
+                updateChatMessages().then(() => {
+                    scrollToBottom()
+                });
+
                 toast.success(df('voice_sent'));
-                scrollToBottom();
                 sendPushNotification(otherUserId);
             },
             onError: (error) => {
@@ -98,10 +103,12 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
         return groups;
     }, [messages])
 
-    const scrollToBottom = () => {
-        if (chatContainerRef.current) {
-            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-        }
+    const scrollToBottom = (delay = 100) => {
+        setTimeout(() => {
+            if (chatContainerRef.current) {
+                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+            }
+        }, delay);
     };
 
     const scrollToMessage = (messageId) => {
@@ -151,7 +158,38 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
                 setIsUploading(true);
                 sendMessage(formData, {
                     onSuccess: () => {
-                        updateChatMessages();
+                        updateChatMessages().then(() => {
+                            scrollToBottom();
+                        });
+                        setIsUploading(false);
+                    },
+                    onError: (error) => {
+                        toast.error(error.message ? error.message : df('error'));
+                        setIsUploading(false);
+                    }
+                });
+            });
+
+            sendPushNotification(otherUserId);
+        }
+    };
+
+    const handlePaste = (event) => {
+        if (event.clipboardData && event.clipboardData.files.length > 0) {
+            event.preventDefault();
+            const files = Array.from(event.clipboardData.files);
+
+            files.forEach((file) => {
+                const formData = new FormData();
+                formData.append('to_user_id', otherUserId);
+                formData.append('chat_file', file);
+
+                setIsUploading(true);
+                sendMessage(formData, {
+                    onSuccess: () => {
+                        updateChatMessages().then(() => {
+                            scrollToBottom();
+                        });
                         setIsUploading(false);
                     },
                     onError: (error) => {
@@ -218,7 +256,9 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
             sendMessage(formData, {
                 onSuccess: () => {
 
-                    updateChatMessages();
+                    updateChatMessages().then(() => {
+                        scrollToBottom();
+                    });
                     sendPushNotification(otherUserId);
                     setMessage("");
                     setReplyingTo(null);
@@ -232,9 +272,62 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
         }
     };
 
-    const handleCopy = (text) => {
-        navigator.clipboard.writeText(text);
-        toast.success(df('copied_to_clipboard'));
+    const handleCopy = async (text) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            toast.success(df('copied_to_clipboard'));
+        } catch (err) {
+            // Fallback for Firefox/non-secure contexts
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                if (successful) {
+                    toast.success(df('copied_to_clipboard'));
+                } else {
+                    toast.error(df('error'));
+                }
+            } catch (fallbackErr) {
+                toast.error(df('error'));
+            }
+        }
+    };
+
+    const renderMessageWithLinks = (text) => {
+        if (!text) return "";
+
+        // Regex to identify links (http, https, www)
+        const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+
+        // Split by regex (capturing groups included)
+        const parts = text.split(urlRegex);
+
+        return parts.map((part, index) => {
+            if (part && part.match(urlRegex)) {
+                return (
+                    <a
+                        key={index}
+                        href={ensureProtocol(part)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-break"
+                    >
+                        {part}
+                    </a>
+                );
+            }
+            return part;
+        });
     };
 
     const handleDeleteForMe = async (messageId) => {
@@ -294,9 +387,9 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
     };
 
 
-
-
     useEffect(() => {
+        firstOpen.current = true;
+
         const channel = new BroadcastChannel('chat_updates_channel');
         channel.onmessage = (event) => {
             if (event.data.type === 'PUSH_NOTIFICATION_RECEIVED') {
@@ -305,12 +398,38 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
             }
         };
 
+
+        queryClient.setQueryData(['chat-users'], (oldData) => {
+            if (!oldData) return oldData;
+
+            const updatedUsers = oldData.users.map(user => {
+                if (user.id === otherUserId) {
+                    return {
+                        ...user,
+                        unread_count: 0
+                    };
+                }
+                return user;
+            });
+
+            return { ...oldData, users: updatedUsers };
+
+        });
+
+
         return () => {
             channel.close();
         };
     }, [otherUserId]);
 
 
+    useEffect(() => {
+        if (chatData && firstOpen.current) {
+            firstOpen.current = false;
+            scrollToBottom();
+        }
+
+    }, [chatData]);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -325,11 +444,8 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
     }, []);
 
     useEffect(() => {
-        if (!isSearchOpen) {
-            scrollToBottom();
-        }
-        Fancybox.bind("[data-fancybox]", {});
 
+        Fancybox.bind("[data-fancybox]", {});
 
     }, [chatData, otherUserId, isSearchOpen]);
 
@@ -505,11 +621,9 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
                                         )}
                                         {message.message && message.message.trim() !== '' && (
                                             <div className="mb-2" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                                                {isLink(message.message)
-                                                    ? <a href={ensureProtocol(message.message)} target="_blank">{message.message}</a>
-                                                    : message.message}
+                                                {renderMessageWithLinks(message.message)}
                                                 {message.is_edited == 1 && (
-                                                    <span className="ms-1 opacity-75 x-small" style={{ fontSize: '0.7rem' }}>({df('edited')})</span>
+                                                    <span className="d-block opacity-75 x-small" style={{ fontSize: '0.7rem' }}>({df('edited')})</span>
                                                 )}
                                             </div>
                                         )}
@@ -754,6 +868,7 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
                             )}
                             <textarea
                                 ref={textareaRef}
+                                onPaste={handlePaste}
                                 className="form-control border-0 shadow-none px-0"
                                 placeholder={df('type_message')}
                                 value={message}
