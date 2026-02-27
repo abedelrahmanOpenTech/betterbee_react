@@ -51,12 +51,14 @@ self.addEventListener('notificationclick', function (event) {
 
     event.waitUntil(
         clients.matchAll({
-            type: "window"
+            type: "window",
+            includeUncontrolled: true
         }).then(function (clientList) {
             for (var i = 0; i < clientList.length; i++) {
                 var client = clientList[i];
-                if (client.url == CONFIG.url && 'focus' in client)
+                if ('focus' in client) {
                     return client.focus();
+                }
             }
             if (clients.openWindow) {
                 return clients.openWindow(CONFIG.url);
@@ -64,14 +66,3 @@ self.addEventListener('notificationclick', function (event) {
         })
     );
 });
-
-// async function updateLastSeen() {
-//     console.log('66');
-//     await http(`${apiUrl}/update-last-seen`);
-//     setTimeout(() => {
-//         updateLastSeen();
-//     }, 1000);
-
-// }
-
-// updateLastSeen();

@@ -42,7 +42,8 @@ export function useUpdateTaskStatus() {
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["projects"] });
+            // We handle this via optimistic updates in the UI
+            // queryClient.invalidateQueries({ queryKey: ["projects"] });
         },
     });
 }
@@ -71,7 +72,8 @@ export function useReorderTasks() {
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["projects"] });
+            // We handle this via optimistic updates in the UI
+            // queryClient.invalidateQueries({ queryKey: ["projects"] });
         },
     });
 }
