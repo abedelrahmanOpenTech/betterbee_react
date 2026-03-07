@@ -107,6 +107,10 @@ class User extends Authenticatable
             ->sortByDesc('is_online')
             ->values();
 
+        $currentUser = auth()->user();
+        $currentUser->name = "Me 😎";
+        $users->prepend($currentUser);
+
         return $users;
     }
 

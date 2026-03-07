@@ -37,3 +37,8 @@ export function ensureProtocol(url) {
     return url.startsWith('http') ? url : 'https://' + url;
 }
 
+export function isArabic(text) {
+    if (!text) return false;
+    const firstChar = text.trim().charAt(0);
+    return /[\u0600-\u06FF]/.test(firstChar);
+}

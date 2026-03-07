@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import EmojiPicker from 'emoji-picker-react';
 import { df } from "../../../utils/lang";
-import { formatTime, isImage } from "../../../utils/utils";
+import { formatTime, isImage, isArabic } from "../../../utils/utils";
 import { FileIcon } from "../../../utils/chatUtils";
 
 export default function ChatInputArea({
@@ -173,7 +173,12 @@ export default function ChatInputArea({
                                 placeholder={df('type_message')}
                                 value={message}
                                 onChange={(event) => setMessage(event.target.value)}
-                                style={{ height: '40px', resize: 'none', lineHeight: '25px' }}
+                                style={{
+                                    height: '40px',
+                                    resize: 'none',
+                                    lineHeight: '25px',
+                                    textAlign: !message ? null : (isArabic(message) ? 'right' : 'left'),
+                                }}
                                 onKeyDown={(event) => {
                                     if (event.key === 'Enter' && !event.shiftKey) {
                                         event.preventDefault();

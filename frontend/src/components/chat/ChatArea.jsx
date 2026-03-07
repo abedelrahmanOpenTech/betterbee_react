@@ -102,8 +102,7 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
     const scrollToBottom = (delay = 100) => {
         setTimeout(() => {
             if (chatContainerRef.current) {
-                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-
+                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight + 500;
             }
         }, delay);
     };
@@ -342,7 +341,7 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
     useEffect(() => {
         if (chatData && firstOpen.current) {
             firstOpen.current = false;
-            scrollToBottom();
+            scrollToBottom(300);
         }
     }, [chatData]);
 

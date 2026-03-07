@@ -104,7 +104,7 @@ export default function Home() {
                             <img
                                 src={auth.user?.profile ? uploadsUrl + '/' + auth.user.profile : "https://placehold.co/100x100?text=" + auth.user?.name?.[0]}
                                 className="rounded-circle border border-2 border-white"
-                                style={{ width: '35px', height: '35px', objectFit: 'cover' }}
+                                style={{ width: '35px', height: '35px', objectFit: 'contain' }}
                                 alt=""
                             />
                             <span className="fw-bold">{auth.user?.name}</span>
