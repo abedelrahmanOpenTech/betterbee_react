@@ -242,7 +242,7 @@ export default function TaskManagementModal({ show, onClose }) {
         }
     };
 
-    const handleCopyDoneTasks = () => {
+    const handleCopyDoneTasks = async () => {
         const doneTasksByProject = projects.map(project => ({
             name: project.name,
             tasks: (project.tasks || []).filter(task => task.status === 'done')
@@ -271,18 +271,56 @@ export default function TaskManagementModal({ show, onClose }) {
         });
         html += '</div>';
 
-        const blob = new Blob([html], { type: 'text/html' });
-        const data = [new ClipboardItem({
-            'text/html': blob,
-            'text/plain': new Blob([plainText], { type: 'text/plain' })
-        })];
+        // 1. Try modern navigator.clipboard.write (HTML + Text)
+        if (typeof ClipboardItem !== "undefined" && navigator.clipboard && navigator.clipboard.write) {
+            try {
+                const blob = new Blob([html], { type: 'text/html' });
+                const textBlob = new Blob([plainText], { type: 'text/plain' });
+                const data = [new ClipboardItem({
+                    'text/html': blob,
+                    'text/plain': textBlob
+                })];
+                await navigator.clipboard.write(data);
+                toast.success(df('copied_to_clipboard'));
+                return;
+            } catch (err) {
+                console.error("Clipboard API write failed, falling back to writeText", err);
+            }
+        }
 
-        navigator.clipboard.write(data).then(() => {
-            toast.success(df('copied_to_clipboard'));
-        }).catch(err => {
-            navigator.clipboard.writeText(plainText);
-            toast.success(df('copied_to_clipboard'));
-        });
+        // 2. Fallback to navigator.clipboard.writeText (Plain Text only)
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(plainText);
+                toast.success(df('copied_to_clipboard'));
+                return;
+            } catch (err) {
+                console.error("Clipboard API writeText failed, falling back to execCommand", err);
+            }
+        }
+
+        // 3. Final fallback: document.execCommand('copy')
+        try {
+            const textarea = document.createElement("textarea");
+            textarea.value = plainText;
+            textarea.style.position = "fixed";
+            textarea.style.left = "-9999px";
+            textarea.style.top = "0";
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            if (successful) {
+                toast.success(df('copied_to_clipboard'));
+            } else {
+                throw new Error("execCommand failed");
+            }
+        } catch (err) {
+            console.error("All copy methods failed", err);
+            toast.error(df('copy_failed') || "Copy failed");
+        }
     };
 
     return (
