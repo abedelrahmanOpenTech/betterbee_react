@@ -29,16 +29,54 @@ export const isAudio = (filename) => {
     return ['wav', 'mp3', 'ogg', 'm4a', 'aac', 'webm'].includes(ext);
 };
 
-export function isLink(text) {
-    return text.startsWith('http://') || text.startsWith('https://') || text.startsWith('www.');
-}
-
-export function ensureProtocol(url) {
-    return url.startsWith('http') ? url : 'https://' + url;
-}
-
 export function isArabic(text) {
     if (!text) return false;
     const firstChar = text.trim().charAt(0);
     return /[\u0600-\u06FF]/.test(firstChar);
+}
+
+export async function copyContentsToClipboard(html, plainText) {
+    // 1. Try modern navigator.clipboard.write (HTML + Text)
+    if (typeof ClipboardItem !== "undefined" && navigator.clipboard && navigator.clipboard.write) {
+        try {
+            const blob = new Blob([html], { type: 'text/html' });
+            const textBlob = new Blob([plainText], { type: 'text/plain' });
+            const data = [new ClipboardItem({
+                'text/html': blob,
+                'text/plain': textBlob
+            })];
+            await navigator.clipboard.write(data);
+            return true;
+        } catch (err) {
+            console.error("Clipboard API write failed, falling back to writeText", err);
+        }
+    }
+
+    // 2. Fallback to navigator.clipboard.writeText (Plain Text only)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+            await navigator.clipboard.writeText(plainText);
+            return true;
+        } catch (err) {
+            console.error("Clipboard API writeText failed, falling back to execCommand", err);
+        }
+    }
+
+    // 3. Final fallback: document.execCommand('copy')
+    try {
+        const textarea = document.createElement("textarea");
+        textarea.value = plainText;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        textarea.style.top = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return successful;
+    } catch (err) {
+        console.error("All copy methods failed", err);
+        return false;
+    }
 }

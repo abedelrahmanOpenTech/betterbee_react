@@ -8,6 +8,7 @@ import { useCreateTask, useUpdateTaskStatus, useDeleteTask, useUpdateTask, useRe
 import Spinner from "../ui/Spinner";
 import toast from "react-hot-toast";
 import { MySwal } from "../../utils/chatUtils";
+import { copyContentsToClipboard } from "../../utils/utils";
 import { uploadsUrl } from "../../config";
 import { Fancybox } from "@fancyapps/ui";
 import "@fancyapps/ui/dist/fancybox/fancybox.css";
@@ -242,83 +243,38 @@ export default function TaskManagementModal({ show, onClose }) {
         }
     };
 
-    const handleCopyDoneTasks = async () => {
-        const doneTasksByProject = projects.map(project => ({
-            name: project.name,
-            tasks: (project.tasks || []).filter(task => task.status === 'done')
-        })).filter(project => project.tasks.length > 0);
 
-        if (doneTasksByProject.length === 0) {
-            toast.error(df('no_done_tasks'));
+
+
+    const handleCopyStatusTasks = async (status) => {
+        if (!selectedProject) return;
+
+        const tasks = (selectedProject.tasks || []).filter(task => task.status === status)
+            .sort((a, b) => a.position - b.position);
+
+        if (tasks.length === 0) {
+            toast.error(df('no_tasks_found') || "No tasks found");
             return;
         }
 
         let html = '<div style="font-family: Arial, sans-serif;">';
         let plainText = "";
 
-        doneTasksByProject.forEach(project => {
-            html += `<h3 style="color: #4a4a4a; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">${project.name}</h3>`;
-            html += '<ul style="padding-left: 20px; margin-bottom: 20px;">';
-            plainText += `${project.name}:\n`;
+        html += `<h3 style="color: #4a4a4a; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;">${selectedProject.name} - ${df(status)}</h3>`;
+        html += '<ul style="padding-left: 20px; margin-bottom: 20px;">';
+        plainText += `${selectedProject.name} - ${df(status)}:\n`;
 
-            project.tasks.sort((a, b) => a.position - b.position).forEach(task => {
-                html += `<li style="margin-bottom: 5px;">${task.title}</li>`;
-                plainText += `- ${task.title}\n`;
-            });
-
-            html += '</ul>';
-            plainText += '\n';
+        tasks.forEach(task => {
+            html += `<li style="margin-bottom: 5px;">${task.title}</li>`;
+            plainText += `- ${task.title}\n`;
         });
-        html += '</div>';
 
-        // 1. Try modern navigator.clipboard.write (HTML + Text)
-        if (typeof ClipboardItem !== "undefined" && navigator.clipboard && navigator.clipboard.write) {
-            try {
-                const blob = new Blob([html], { type: 'text/html' });
-                const textBlob = new Blob([plainText], { type: 'text/plain' });
-                const data = [new ClipboardItem({
-                    'text/html': blob,
-                    'text/plain': textBlob
-                })];
-                await navigator.clipboard.write(data);
-                toast.success(df('copied_to_clipboard'));
-                return;
-            } catch (err) {
-                console.error("Clipboard API write failed, falling back to writeText", err);
-            }
-        }
+        html += '</ul></div>';
 
-        // 2. Fallback to navigator.clipboard.writeText (Plain Text only)
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            try {
-                await navigator.clipboard.writeText(plainText);
-                toast.success(df('copied_to_clipboard'));
-                return;
-            } catch (err) {
-                console.error("Clipboard API writeText failed, falling back to execCommand", err);
-            }
-        }
-
-        // 3. Final fallback: document.execCommand('copy')
-        try {
-            const textarea = document.createElement("textarea");
-            textarea.value = plainText;
-            textarea.style.position = "fixed";
-            textarea.style.left = "-9999px";
-            textarea.style.top = "0";
-            document.body.appendChild(textarea);
-            textarea.focus();
-            textarea.select();
-            const successful = document.execCommand('copy');
-            document.body.removeChild(textarea);
-
-            if (successful) {
-                toast.success(df('copied_to_clipboard'));
-            } else {
-                throw new Error("execCommand failed");
-            }
-        } catch (err) {
-            console.error("All copy methods failed", err);
+        const success = await copyContentsToClipboard(html, plainText);
+        if (success) {
+            toast.success(df('copied_to_clipboard'));
+        } else {
             toast.error(df('copy_failed') || "Copy failed");
         }
     };
@@ -331,10 +287,6 @@ export default function TaskManagementModal({ show, onClose }) {
                         <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                     </svg>
                     {df('task_management')}
-                    <Button variant="outline-light" size="sm" className="ms-auto me-3 border-0" onClick={handleCopyDoneTasks} title={df('copy_done_tasks')}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-1"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" ry="1" /></svg>
-                        {df('copy_done_tasks')}
-                    </Button>
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body className="bg-light p-0" style={{ minHeight: '80vh' }}>
@@ -397,9 +349,18 @@ export default function TaskManagementModal({ show, onClose }) {
                                             <div key={status} className="col-md-4">
                                                 <div className="kanban-column bg-white bg-opacity-50 rounded-4 p-3 h-100 border shadow-sm">
                                                     <div className="d-flex align-items-center justify-content-between mb-3 px-2">
-                                                        <h6 className="text-uppercase fw-bold text-secondary mb-0 letter-spacing-1">
-                                                            {df(status)}
-                                                        </h6>
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <h6 className="text-uppercase fw-bold text-secondary mb-0 letter-spacing-1">
+                                                                {df(status)}
+                                                            </h6>
+                                                            <button
+                                                                className="btn btn-link p-0 text-muted opacity-50 hover-opacity-100 transition-all border-0 shadow-none d-flex align-items-center"
+                                                                onClick={() => handleCopyStatusTasks(status)}
+                                                                title={df('copy')}
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                                                            </button>
+                                                        </div>
                                                         <Badge bg={status === 'pending' ? 'warning' : status === 'working' ? 'primary' : 'success'} pill>
                                                             {selectedProject.tasks?.filter(task => task.status === status).length || 0}
                                                         </Badge>

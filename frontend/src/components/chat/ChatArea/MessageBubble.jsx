@@ -1,7 +1,7 @@
 import { Dropdown } from "react-bootstrap";
 import { df } from "../../../utils/lang";
 import { uploadsUrl } from "../../../config";
-import { basename, isImage, isAudio } from "../../../utils/utils";
+import { basename, isImage, isAudio, isArabic } from "../../../utils/utils";
 import Linkify from 'linkify-react';
 import { MessageOptionsToggle, FileIcon } from "../../../utils/chatUtils";
 
@@ -35,14 +35,31 @@ export default function MessageBubble({
                 {message.file && (
                     <div className="mb-2 rounded text-dark overflow-hidden">
                         {isImage(message.file) ? (
-                            <a href={uploadsUrl + '/' + message.file} data-fancybox={`gallery-${otherUserId}`}>
-                                <img
-                                    src={uploadsUrl + '/' + message.file}
-                                    alt="Attachment"
-                                    className="img-fluid rounded"
-                                    style={{ maxHeight: '200px', objectFit: 'cover' }}
-                                />
-                            </a>
+                            <div className="position-relative">
+                                <a href={uploadsUrl + '/' + message.file} data-fancybox={`gallery-${otherUserId}`}>
+                                    <img
+                                        src={uploadsUrl + '/' + message.file}
+                                        alt="Attachment"
+                                        className="img-fluid rounded"
+                                        style={{ maxHeight: '200px', objectFit: 'cover' }}
+                                    />
+                                </a>
+                                <a
+                                    href={uploadsUrl + '/' + message.file}
+                                    download={basename(message.file)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-sm btn-theme rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm position-absolute top-0 end-0 m-1"
+                                    style={{ width: '28px', height: '28px', border: '1px solid rgba(255,255,255,0.2)' }}
+                                    title={df('download')}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                        <polyline points="7 10 12 15 17 10" />
+                                        <line x1="12" y1="15" x2="12" y2="3" />
+                                    </svg>
+                                </a>
+                            </div>
                         ) : isAudio(message.file) ? (
                             <div className="audio-player-container py-1">
                                 <audio
@@ -84,7 +101,7 @@ export default function MessageBubble({
                     </div>
                 )}
                 {message.message && message.message.trim() !== '' && (
-                    <div className="mb-2" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    <div className="mb-2" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', direction: isArabic(message.message) ? 'rtl' : 'ltr', textAlign: isArabic(message.message) ? 'right' : 'left' }}>
                         <Linkify options={{ target: '_blank' }}>
                             {message.message}
                         </Linkify>

@@ -84,7 +84,7 @@ class Chat extends Model
             ->notHiddenFor($userId)
             ->with('reply')
             ->orderBy('id', 'desc')
-            ->take(100)
+            ->take(1000)
             ->get()
             ->reverse()
             ->values();
