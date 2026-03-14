@@ -41,7 +41,7 @@ export default function MessageBubble({
                                         src={uploadsUrl + '/' + message.file}
                                         alt="Attachment"
                                         className="img-fluid rounded"
-                                        style={{ maxHeight: '200px', objectFit: 'cover' }}
+                                        style={{ height: '100px', objectFit: 'cover' }}
                                     />
                                 </a>
                                 <a

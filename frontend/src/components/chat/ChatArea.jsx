@@ -11,7 +11,7 @@ import { MySwal } from "../../utils/chatUtils";
 import AddToProjectModal from "./AddToProjectModal";
 import { useQueryClient } from "@tanstack/react-query";
 
-// Sub-components
+
 import ChatHeader from "./ChatArea/ChatHeader";
 import MessageList from "./ChatArea/MessageList";
 import ChatInputArea from "./ChatArea/ChatInputArea";
@@ -341,7 +341,9 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
     useEffect(() => {
         if (chatData && firstOpen.current) {
             firstOpen.current = false;
-            scrollToBottom(300);
+            if (chatContainerRef.current) {
+                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+            }
         }
     }, [chatData]);
 
