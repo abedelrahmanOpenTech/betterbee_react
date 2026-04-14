@@ -20,7 +20,7 @@ export function useChatMessages(otherUserId) {
             return await http(apiUrl + `/chat/messages/${otherUserId}`);
         },
         enabled: !!otherUserId,
-
+        staleTime: 0,
     });
 }
 

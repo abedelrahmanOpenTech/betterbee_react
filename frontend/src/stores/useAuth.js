@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { getStorage, removeStorage, setStorage } from '../utils/storage';
+import { setTheme } from '../utils/theme';
 
 const useAuth = create((set, get) => ({
     user: {},
@@ -7,6 +8,16 @@ const useAuth = create((set, get) => ({
     isTeacher: () => get().user.type == 'teacher',
     isStudent: () => get().user.type == 'student',
     set: async (newAuth, newAccessToken = null) => {
+        // Apply settings directly
+        if (newAuth.settings) {
+            if (newAuth.settings.theme_color) {
+                setTheme(newAuth.settings.theme_color);
+            }
+            if (newAuth.settings.lang) {
+                localStorage.setItem('user-language', newAuth.settings.lang);
+            }
+        }
+
         //set newAccessToken only if not null
         if (newAccessToken) {
             set({ user: newAuth, accessToken: newAccessToken });
@@ -15,8 +26,6 @@ const useAuth = create((set, get) => ({
             set({ user: newAuth });
         }
         await setStorage("auth", JSON.stringify(newAuth));
-
-
     },
     init: async () => {
         try {

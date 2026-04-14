@@ -178,6 +178,7 @@ export default function ChatInputArea({
                                     resize: 'none',
                                     lineHeight: '25px',
                                     textAlign: !message ? null : (isArabic(message) ? 'right' : 'left'),
+                                    direction: !message ? null : (isArabic(message) ? 'rtl' : 'ltr'),
                                 }}
                                 onKeyDown={(event) => {
                                     if (event.key === 'Enter' && !event.shiftKey) {

@@ -2,29 +2,40 @@ import { useState, useEffect } from "react";
 import { Modal, Button } from "react-bootstrap";
 import { df, getLang, changeLang } from "../../utils/lang";
 import toast from "react-hot-toast";
-import { hexToRgba } from "../../utils/theme";
+import { hexToRgba, setTheme } from "../../utils/theme";
+import useAuth from "../../stores/useAuth";
+import { useSettingsUpdate } from "../../hooks/useAuthQuery";
 
 export default function SettingsModal({ show, onClose }) {
-    const [themeColor, setThemeColor] = useState(localStorage.getItem('theme_color') || '#ffaa00');
+    const auth = useAuth();
+    const updateSettings = useSettingsUpdate();
+
+    const [themeColor, setThemeColor] = useState(auth.user?.settings?.theme_color || localStorage.getItem('theme_color') || '#ffaa00');
     const [currentLang, setCurrentLang] = useState(getLang());
 
     useEffect(() => {
-        const currentTheme = localStorage.getItem('theme_color');
-        if (currentTheme) {
-            setThemeColor(currentTheme);
+        if (show && auth.user?.settings) {
+            setThemeColor(auth.user.settings.theme_color || '#ffaa00');
+            setCurrentLang(auth.user.settings.lang || 'en');
         }
-    }, [show]);
+    }, [show, auth.user]);
 
-    const handleSave = () => {
-        // Save Theme
-        localStorage.setItem('theme_color', themeColor);
-        document.documentElement.style.setProperty('--theme-color', themeColor);
-        document.documentElement.style.setProperty('--theme-color-light', hexToRgba(themeColor));
+    const handleSave = async () => {
 
-        // Save Language (Reloads page)
+        // 1. First, save to API
+        const response = await updateSettings.mutateAsync({
+            theme_color: themeColor,
+            lang: currentLang
+        });
+
+        if (response.status !== 'success') {
+            toast.error(response.message || 'Failed to update settings');
+            return;
+        }
+
+        // Language change reload
         if (currentLang !== getLang()) {
-            changeLang(currentLang);
-            // changeLang triggers reload, so we don't need to do anything else (like toast) effectively
+            changeLang(currentLang); // Handles reload
             return;
         }
 
@@ -47,7 +58,10 @@ export default function SettingsModal({ show, onClose }) {
                             className="form-control form-control-color border-0 p-0 overflow-hidden cursor-pointer"
                             style={{ width: '60px', height: '60px', borderRadius: '12px' }}
                             value={themeColor}
-                            onChange={(e) => setThemeColor(e.target.value)}
+                            onChange={(e) => {
+                                setThemeColor(e.target.value);
+                                setTheme(e.target.value);
+                            }}
                         />
                         <span className="text-secondary fw-medium">{themeColor.toUpperCase()}</span>
                     </div>

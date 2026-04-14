@@ -55,3 +55,19 @@ export function useAuthInit(enabled = true) {
         },
     });
 }
+export function useSettingsUpdate() {
+    const auth = useAuth();
+    return useMutation({
+        mutationFn: async (data) => {
+            const response = await http(apiUrl + "/update-settings", {
+                method: "post",
+                body: JSON.stringify(data),
+            })
+            if (response && response.status === 'success') {
+                await auth.set(response.user);
+            }
+            return response;
+        },
+    });
+}
+

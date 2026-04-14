@@ -10,10 +10,15 @@ export const hexToRgba = (hex, alpha = 0.1) => {
     }
 };
 
-export const initTheme = () => {
-    const themeColor = localStorage.getItem('theme_color');
+export const setTheme = (themeColor) => {
     if (themeColor) {
         document.documentElement.style.setProperty('--theme-color', themeColor);
         document.documentElement.style.setProperty('--theme-color-light', hexToRgba(themeColor));
+        localStorage.setItem('theme_color', themeColor);
     }
+}
+
+export const initTheme = () => {
+    const themeColor = localStorage.getItem('theme_color');
+    setTheme(themeColor);
 };

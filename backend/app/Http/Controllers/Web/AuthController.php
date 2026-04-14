@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Settings;
 use App\Models\User;
+use App\Models\UserSetting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -37,6 +38,7 @@ class AuthController extends Controller
         }
 
         $user = Auth::user();
+        $user->load('settings');
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -75,7 +77,7 @@ class AuthController extends Controller
 
         $validated['password'] = Hash::make($validated['password']);
         $user = User::create($validated);
-
+        $user->load('settings');
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -128,10 +130,34 @@ class AuthController extends Controller
 
 
         $user->update($validated);
+        $user->load('settings');
 
         return response()->json([
             "status" => "success",
             "message" => "Profile Updated",
+            "user" => $user
+        ]);
+    }
+
+    public function updateSettings()
+    {
+        $user = Auth::user();
+
+        $validated = request()->validate([
+            "theme_color" => ["nullable", "string"],
+            "lang" => ["nullable", "string"],
+        ]);
+
+        $user->settings()->updateOrCreate(
+            ['user_id' => $user->id],
+            $validated
+        );
+
+        $user->load('settings');
+
+        return response()->json([
+            "status" => "success",
+            "message" => "Settings Updated",
             "user" => $user
         ]);
     }

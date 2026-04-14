@@ -44,6 +44,11 @@ class User extends Authenticatable
         'last_seen' => 'datetime',
     ];
 
+    public function settings()
+    {
+        return $this->hasOne(UserSetting::class, 'user_id');
+    }
+
     protected static $onlineDiffTimeInSeconds = 15;
 
     public function chats()

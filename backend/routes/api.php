@@ -21,12 +21,15 @@ Route::post("register", [AuthController::class, 'register']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
+        $user = $request->user();
+        $user->load('settings');
         return [
             "status" => "success",
-            "user" => $request->user()
+            "user" => $user
         ];
     });
 
+    Route::post("update-settings", [AuthController::class, 'updateSettings']);
     Route::post("update-profile", [AuthController::class, 'update']);
 
     Route::prefix('chat')->group(function () {

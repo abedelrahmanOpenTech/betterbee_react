@@ -39,7 +39,7 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
     const emojiPickerRef = useRef(null);
     const firstOpen = useRef(true);
 
-    const { data: chatData, isLoading } = useChatMessages(otherUserId);
+    const { data: chatData, isLoading, isFetching } = useChatMessages(otherUserId);
     const { refetch: updateChatMessages } = useChatUpdates(false, otherUserId, auth?.user?.id);
 
     const { mutate: sendMessage, isPending: isSending } = useSendMessage();
@@ -339,13 +339,12 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
     }, [otherUserId]);
 
     useEffect(() => {
-        if (chatData && firstOpen.current) {
-            firstOpen.current = false;
+        if (chatData && !isFetching) {
             if (chatContainerRef.current) {
                 chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
             }
         }
-    }, [chatData]);
+    }, [chatData, isFetching]);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -389,7 +388,7 @@ export default function ChatArea({ otherUserId, onClose, onForward }) {
         }
     }, [isLoading, otherUserId, isSearchOpen, replyingTo, editingMessage]);
 
-    if (isLoading && !chatData) {
+    if (isFetching) {
         return (
             <div className="flex-grow-1 d-flex align-items-center justify-content-center bg-grey h-100">
                 <Spinner />
